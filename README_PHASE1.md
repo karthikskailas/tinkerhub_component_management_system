@@ -1,7 +1,23 @@
 # Phase 1 — Database Foundation
 
 Supabase backend for the Electronic Components Inventory System: schema,
-RLS, RPCs, one edge function, pgTAP tests. No app code yet.
+RLS, RPCs, one edge function, pgTAP tests. The repo root is also a Vite +
+React + TypeScript app (scaffolded, no UI yet — that's Phase 2) wired up to
+talk to this backend.
+
+## Local dev
+
+```bash
+npm install
+cp .env.example .env         # fill in VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY
+npm run dev                  # Vite dev server
+supabase start                # local Postgres + Studio (separate terminal, requires Docker)
+npm run db:types              # regenerate src/types/database.types.ts from the local schema
+```
+
+`src/lib/supabase.ts` exports the typed Supabase client and throws at
+startup if either env var is missing. `supabase start` must be running
+before `db:types` can introspect the schema.
 
 ## Local setup
 
