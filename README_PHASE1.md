@@ -116,6 +116,25 @@ rejects anonymous callers, creates the auth user, inserts the `staff` row,
 and rolls back the auth user if that insert fails. Returns
 `{ user_id, email, role }`, never the password.
 
+## Staff auth (frontend, Phase 3a)
+
+`/admin/*` has its own React login page (email + password only — no
+sign-up, OTP, magic link, or OAuth) and a `RequireStaff` route guard that
+checks for an active row in `staff`. **This guard is UI-only, for
+navigation/UX — it is never the real security boundary.** The actual
+enforcement is, and must stay, in Postgres:
+
+- RLS policies (`0003_helpers_and_rls.sql`) decide what every role can
+  `SELECT`.
+- Every staff RPC (`approve_request`, `issue_request`, `verify_return`,
+  the inventory upload functions, etc.) re-checks `is_admin()`/`is_staff()`
+  itself and raises `E_FORBIDDEN` if the caller isn't allowed, regardless
+  of what the UI let them click.
+
+A bug in `RequireStaff` can at worst show someone a page they can't
+actually do anything on — it can never grant a database write the RLS/RPC
+layer wouldn't already allow.
+
 ## Assumptions
 
 Ambiguities in the spec were resolved as follows:
