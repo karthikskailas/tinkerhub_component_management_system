@@ -116,6 +116,39 @@ rejects anonymous callers, creates the auth user, inserts the `staff` row,
 and rolls back the auth user if that insert fails. Returns
 `{ user_id, email, role }`, never the password.
 
+## Screenshot cleanup
+
+A request's verification screenshot is only needed while it's pending
+review. A trigger on `requests` (`0010_screenshot_cleanup.sql`) queues the
+storage path into `storage_cleanup_queue` the moment a request becomes
+`approved`, `rejected`, `cancelled`, or `expired`. The `cleanup-screenshots`
+edge function does the actual deletion, batching up to 100 queued paths at
+a time and marking each row (and `requests.screenshot_deleted_at`) done
+once removed.
+
+Deploy and schedule it:
+
+```bash
+supabase functions deploy cleanup-screenshots --no-verify-jwt
+supabase secrets set CLEANUP_SECRET=<a-long-random-string>
+```
+
+Then run `supabase/schedule_cleanup.sql` once in the SQL editor (after
+filling in your project ref and the secret) — it schedules the function
+via `pg_cron` + `pg_net` every 10 minutes.
+
+To run it once by hand to test:
+
+```bash
+curl -X POST \
+  -H "x-cron-secret: <same-secret-as-above>" \
+  -H "Content-Type: application/json" \
+  https://<project-ref>.supabase.co/functions/v1/cleanup-screenshots
+```
+
+A call without that header, and without a valid admin JWT in
+`Authorization` instead, gets 401/403.
+
 ## Staff auth (frontend, Phase 3a)
 
 `/admin/*` has its own React login page (email + password only — no

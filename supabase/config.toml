@@ -383,6 +383,12 @@ allow_dynamic_registration = false
 [functions.create-staff]
 verify_jwt = true
 
+# cleanup-screenshots is called by pg_cron/pg_net with a shared secret
+# header, not a user JWT, so the platform-level check must be off here —
+# the function verifies callers itself (secret header OR admin JWT).
+[functions.cleanup-screenshots]
+verify_jwt = false
+
 [edge_runtime]
 enabled = true
 # Supported request policies: `oneshot`, `per_worker`.

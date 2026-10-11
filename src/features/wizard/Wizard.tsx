@@ -6,6 +6,7 @@ import { useAuth } from "../auth/useAuth";
 import { useCatalog } from "../catalog/useCatalog";
 import type { CartLine } from "../catalog/ComponentPicker";
 import { OpenRequestBanner } from "../requests/OpenRequestBanner";
+import { GuideStep } from "./steps/GuideStep";
 import { Step1Path } from "./steps/Step1Path";
 import { Step2Details } from "./steps/Step2Details";
 import { Step3Components } from "./steps/Step3Components";
@@ -96,11 +97,18 @@ export function Wizard() {
 
       <Stepper step={draft.step} total={4} labels={STEP_LABELS} />
 
-      {draft.step === 1 && (
+      {draft.step === 1 && draft.path !== "new" && (
         <Step1Path
           onChoose={(path) =>
-            setDraft((prev) => ({ ...prev, path, step: 2 }))
+            setDraft((prev) => ({ ...prev, path, step: path === "new" ? 1 : 2 }))
           }
+        />
+      )}
+
+      {draft.step === 1 && draft.path === "new" && (
+        <GuideStep
+          onBack={() => setDraft((prev) => ({ ...prev, path: null }))}
+          onContinue={() => goTo(2)}
         />
       )}
 

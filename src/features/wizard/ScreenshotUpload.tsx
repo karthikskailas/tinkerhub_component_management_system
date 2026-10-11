@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { toast } from "../../components/ui/Toast";
 import { compressToWebp, validateImageFile, ImageValidationError } from "../../lib/image";
 import { supabase } from "../../lib/supabase";
@@ -7,9 +8,19 @@ interface ScreenshotUploadProps {
   userId: string;
   path: string | null;
   onChange: (path: string | null) => void;
+  label?: string;
+  labelExtra?: ReactNode;
+  helperText?: string;
 }
 
-export function ScreenshotUpload({ userId, path, onChange }: ScreenshotUploadProps) {
+export function ScreenshotUpload({
+  userId,
+  path,
+  onChange,
+  label = "Payment / registration screenshot",
+  labelExtra,
+  helperText,
+}: ScreenshotUploadProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -53,9 +64,11 @@ export function ScreenshotUpload({ userId, path, onChange }: ScreenshotUploadPro
 
   return (
     <div>
-      <span className="mb-1 block text-sm font-medium text-slate-700">
-        Payment / registration screenshot
-      </span>
+      <div className="mb-1 flex items-center justify-between gap-2">
+        <span className="block text-sm font-medium text-slate-700">{label}</span>
+        {labelExtra}
+      </div>
+      {helperText && <p className="mb-2 text-xs text-slate-500">{helperText}</p>}
 
       {path && (
         <div className="mb-2 flex items-center gap-3 rounded-lg border border-slate-200 p-2">

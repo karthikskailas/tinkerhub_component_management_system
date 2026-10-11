@@ -7,6 +7,7 @@ import { Input, Textarea } from "../../../components/ui/Input";
 import { toast } from "../../../components/ui/Toast";
 import { isValidIndianMobile } from "../../../lib/phone";
 import { findProjects } from "../../requests/api";
+import { ExampleImageTrigger } from "../ExampleImage";
 import { ScreenshotUpload } from "../ScreenshotUpload";
 import { detailsSchema, newProjectSchema } from "../schema";
 import type { DetailsFormValues, NewProjectFormValues } from "../schema";
@@ -177,7 +178,18 @@ export function Step2Details({ draft, userId, onBack, onNext }: Step2Props) {
           </div>
         )}
 
-        <ScreenshotUpload userId={userId} path={screenshotPath} onChange={setScreenshotPath} />
+        <ScreenshotUpload
+          userId={userId}
+          path={screenshotPath}
+          onChange={setScreenshotPath}
+          label="Screenshot of your project page on the TinkerHub app"
+          labelExtra={
+            <ExampleImageTrigger className="text-xs font-medium text-indigo-600">
+              See example
+            </ExampleImageTrigger>
+          }
+          helperText="We use this only to verify your project. It is deleted after your request is reviewed."
+        />
       </div>
 
       <div className="mt-6 flex justify-between">

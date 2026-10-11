@@ -42,9 +42,8 @@ select is(
   (select count(*) from components)::int, 0,
   'a client gets zero rows reading components directly (RLS blocks it)'
 );
-select is(
-  (select location from component_catalog limit 1),
-  null,
+select hasnt_column(
+  'public', 'component_catalog', 'location',
   'component_catalog never exposes location'
 );
 select is(
