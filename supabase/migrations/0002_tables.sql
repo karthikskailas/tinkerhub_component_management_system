@@ -33,7 +33,7 @@ create table if not exists projects (
 
 create table if not exists requests (
   id uuid primary key default gen_random_uuid(),
-  public_token text unique not null default encode(gen_random_bytes(16), 'hex'),
+  public_token text unique not null default encode(extensions.gen_random_bytes(16), 'hex'),
   project_id uuid references projects (id),
   requester_id uuid not null default auth.uid(),
   requester_name text not null,
