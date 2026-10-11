@@ -27,6 +27,9 @@ const AdminHome = lazy(() =>
 const PlaceholderPage = lazy(() =>
   import("./features/admin/PlaceholderPage").then((m) => ({ default: m.PlaceholderPage })),
 );
+const ReviewPage = lazy(() =>
+  import("./features/admin/review/ReviewPage").then((m) => ({ default: m.ReviewPage })),
+);
 const RequireStaff = lazy(() =>
   import("./features/admin/RequireStaff").then((m) => ({ default: m.RequireStaff })),
 );
@@ -61,7 +64,15 @@ export function AppRoutes() {
             path="review"
             element={
               <RequireStaff roles={["admin"]}>
-                <PlaceholderPage title="Review" />
+                <ReviewPage />
+              </RequireStaff>
+            }
+          />
+          <Route
+            path="review/:id"
+            element={
+              <RequireStaff roles={["admin"]}>
+                <ReviewPage />
               </RequireStaff>
             }
           />
