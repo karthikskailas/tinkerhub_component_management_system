@@ -1,0 +1,18 @@
+-- Manual script to bootstrap the first admin account. NOT a migration — do
+-- not add this to supabase/migrations/ and do not run it automatically.
+--
+-- Steps:
+--   1. In the Supabase Dashboard, go to Authentication > Users > Add user,
+--      and create the first admin with an email + password (Auto Confirm
+--      User checked). Email sign-up is disabled for self-service, but the
+--      dashboard can still create a user directly.
+--   2. Copy that user's UUID from the Users table.
+--   3. Paste it below and run this statement in the SQL editor (or via
+--      `psql` connected to the project).
+--
+-- insert into staff (user_id, role, display_name)
+-- values ('00000000-0000-0000-0000-000000000000', 'admin', 'First Admin');
+--
+-- After this, the admin can sign in with email + password and use the
+-- create-staff edge function to create every other staff account
+-- (admins and inventory managers).
