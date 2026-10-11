@@ -13,7 +13,7 @@ const FRIENDLY: Record<string, string> = {
     "You already have 3 open requests. Please wait for one to be resolved before submitting another.",
   E_PROJECT_NOT_FOUND: "That project doesn't match the phone number.",
   E_NOT_CANCELLABLE: "This request was already reviewed and can no longer be cancelled.",
-  E_NOT_FOUND: "We couldn't find that request.",
+  E_NOT_FOUND: "We couldn't find that.",
   E_RATE_LIMIT: "Too many lookups — please wait a bit and try again.",
   E_FORBIDDEN: "You don't have permission to do that.",
   E_INVALID_STATUS: "This request is no longer in a state that allows that action.",

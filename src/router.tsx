@@ -30,6 +30,9 @@ const PlaceholderPage = lazy(() =>
 const ReviewPage = lazy(() =>
   import("./features/admin/review/ReviewPage").then((m) => ({ default: m.ReviewPage })),
 );
+const InventoryPage = lazy(() =>
+  import("./features/admin/inventory/InventoryPage").then((m) => ({ default: m.InventoryPage })),
+);
 const RequireStaff = lazy(() =>
   import("./features/admin/RequireStaff").then((m) => ({ default: m.RequireStaff })),
 );
@@ -80,7 +83,7 @@ export function AppRoutes() {
             path="inventory"
             element={
               <RequireStaff roles={["admin", "inventory_manager"]}>
-                <PlaceholderPage title="Inventory" />
+                <InventoryPage />
               </RequireStaff>
             }
           />

@@ -1,0 +1,64 @@
+import { useQuery } from "@tanstack/react-query";
+import { Modal } from "../../../components/ui/Modal";
+import { SkeletonLines } from "../../../components/ui/Skeleton";
+import { fetchAdjustmentHistory } from "./api";
+import type { ComponentRow } from "./api";
+
+interface HistoryDrawerProps {
+  component: ComponentRow | null;
+  onClose: () => void;
+}
+
+export function HistoryDrawer({ component, onClose }: HistoryDrawerProps) {
+  const query = useQuery({
+    queryKey: ["inventory_adjustments", component?.id],
+    queryFn: () => fetchAdjustmentHistory(component!.id),
+    enabled: !!component,
+  });
+
+  return (
+    <Modal
+      open={!!component}
+      onClose={onClose}
+      widthClassName="max-w-xl"
+      titleId="history-drawer-title"
+    >
+      {component && (
+        <>
+          <h2 id="history-drawer-title" className="text-lg font-semibold text-slate-900">
+            History — {component.name}
+          </h2>
+          <p className="mb-3 text-sm text-slate-500">Last 50 adjustments.</p>
+
+          {query.isLoading && <SkeletonLines count={5} />}
+          {query.isError && <p className="text-sm text-red-600">Couldn't load history.</p>}
+          {query.data && query.data.length === 0 && (
+            <p className="text-sm text-slate-400">No adjustments yet.</p>
+          )}
+
+          {query.data && query.data.length > 0 && (
+            <ul className="divide-y divide-slate-100">
+              {query.data.map((entry) => (
+                <li key={entry.id} className="py-2.5 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-slate-900">
+                      {entry.old_count ?? "—"} → {entry.new_count ?? "—"}
+                    </span>
+                    <span className="text-xs text-slate-400">
+                      {new Date(entry.created_at).toLocaleString()}
+                    </span>
+                  </div>
+                  {entry.reason && <p className="text-slate-600">{entry.reason}</p>}
+                  <p className="text-xs text-slate-400">
+                    {entry.source ?? "unknown"} ·{" "}
+                    {entry.actor_display_name ?? (entry.actor_id ? entry.actor_id.slice(0, 8) : "system")}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
+    </Modal>
+  );
+}
