@@ -1,3 +1,4 @@
+import { buildCsv, csvCell, downloadCsv } from "../../../lib/csv";
 import { countComponents, queryComponentsPage } from "./api";
 import type { StockFilter } from "./api";
 
@@ -63,51 +64,21 @@ export async function fetchExportRows(params: {
   return rows;
 }
 
-const FORMULA_PREFIX = /^[=+\-@]/;
-
-function csvCell(value: string, isNumeric: boolean): string {
-  // Spreadsheet formula injection guard: a cell starting with =, +, - or @
-  // gets interpreted as a formula by Excel/Sheets unless neutralized.
-  // Numeric columns never need this (a bare number can't start with one of
-  // those and still parse as the number it is).
-  const safe = !isNumeric && FORMULA_PREFIX.test(value) ? `'${value}` : value;
-  return /[",\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
-}
-
 export function buildExportCsv(rows: ExportRow[]): string {
   const header = "name,location,count,description,returnable,reserved,available,updated_at";
-  const lines = rows.map((row) =>
-    [
-      csvCell(row.name, false),
-      csvCell(row.location ?? "", false),
-      csvCell(String(row.count), true),
-      csvCell(row.description ?? "", false),
-      csvCell(row.returnable ? "yes" : "no", false),
-      csvCell(String(row.reserved), true),
-      csvCell(String(row.available), true),
-      csvCell(row.updated_at, false),
-    ].join(","),
-  );
-  // UTF-8 BOM so Excel detects the encoding and renders non-ASCII correctly.
-  return "﻿" + [header, ...lines].join("\n");
-}
-
-function exportFilename(): string {
-  const now = new Date();
-  const pad = (n: number) => String(n).padStart(2, "0");
-  const stamp =
-    `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}` +
-    `-${pad(now.getHours())}${pad(now.getMinutes())}`;
-  return `inventory-${stamp}.csv`;
+  const lines = rows.map((row) => [
+    csvCell(row.name),
+    csvCell(row.location ?? ""),
+    csvCell(String(row.count), true),
+    csvCell(row.description ?? ""),
+    csvCell(row.returnable ? "yes" : "no"),
+    csvCell(String(row.reserved), true),
+    csvCell(String(row.available), true),
+    csvCell(row.updated_at),
+  ]);
+  return buildCsv(header, lines);
 }
 
 export function downloadExportCsv(rows: ExportRow[]): void {
-  const csv = buildExportCsv(rows);
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = exportFilename();
-  link.click();
-  URL.revokeObjectURL(url);
+  downloadCsv("inventory", buildExportCsv(rows));
 }

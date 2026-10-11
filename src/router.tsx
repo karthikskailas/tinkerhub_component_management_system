@@ -24,14 +24,20 @@ const AdminLayout = lazy(() =>
 const AdminHome = lazy(() =>
   import("./features/admin/AdminHome").then((m) => ({ default: m.AdminHome })),
 );
-const PlaceholderPage = lazy(() =>
-  import("./features/admin/PlaceholderPage").then((m) => ({ default: m.PlaceholderPage })),
-);
 const ReviewPage = lazy(() =>
   import("./features/admin/review/ReviewPage").then((m) => ({ default: m.ReviewPage })),
 );
 const InventoryPage = lazy(() =>
   import("./features/admin/inventory/InventoryPage").then((m) => ({ default: m.InventoryPage })),
+);
+const IssuePage = lazy(() =>
+  import("./features/admin/issue/IssuePage").then((m) => ({ default: m.IssuePage })),
+);
+const ReturnsPage = lazy(() =>
+  import("./features/admin/returns/ReturnsPage").then((m) => ({ default: m.ReturnsPage })),
+);
+const HistoryPage = lazy(() =>
+  import("./features/admin/history/HistoryPage").then((m) => ({ default: m.HistoryPage })),
 );
 const RequireStaff = lazy(() =>
   import("./features/admin/RequireStaff").then((m) => ({ default: m.RequireStaff })),
@@ -88,10 +94,34 @@ export function AppRoutes() {
             }
           />
           <Route
+            path="issue"
+            element={
+              <RequireStaff roles={["admin", "inventory_manager"]}>
+                <IssuePage />
+              </RequireStaff>
+            }
+          />
+          <Route
+            path="issue/:id"
+            element={
+              <RequireStaff roles={["admin", "inventory_manager"]}>
+                <IssuePage />
+              </RequireStaff>
+            }
+          />
+          <Route
             path="returns"
             element={
               <RequireStaff roles={["admin", "inventory_manager"]}>
-                <PlaceholderPage title="Returns" />
+                <ReturnsPage />
+              </RequireStaff>
+            }
+          />
+          <Route
+            path="returns/:id"
+            element={
+              <RequireStaff roles={["admin", "inventory_manager"]}>
+                <ReturnsPage />
               </RequireStaff>
             }
           />
@@ -99,7 +129,15 @@ export function AppRoutes() {
             path="history"
             element={
               <RequireStaff roles={["admin", "inventory_manager"]}>
-                <PlaceholderPage title="History" />
+                <HistoryPage />
+              </RequireStaff>
+            }
+          />
+          <Route
+            path="history/:id"
+            element={
+              <RequireStaff roles={["admin", "inventory_manager"]}>
+                <HistoryPage />
               </RequireStaff>
             }
           />
