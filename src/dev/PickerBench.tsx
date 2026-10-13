@@ -17,9 +17,13 @@ export function PickerBench() {
 
   useEffect(() => {
     renderStart.current = performance.now();
-    import("../../dev-data/fake-components.json")
-      .then((mod) => {
-        setItems(mod.default as CatalogRow[]);
+    fetch("/dev-data/fake-components.json")
+      .then((res) => {
+        if (!res.ok) throw new Error("not found");
+        return res.json();
+      })
+      .then((data) => {
+        setItems(data as CatalogRow[]);
         setRenderMs(performance.now() - renderStart.current);
       })
       .catch(() => setError(true));

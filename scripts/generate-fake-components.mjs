@@ -10,7 +10,13 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const count = Number(process.argv[2]) || 3000;
-const outDir = join(dirname(fileURLToPath(import.meta.url)), "..", "dev-data");
+// Lives under public/ (gitignored) so Vite's dev server serves it as a
+// plain static asset at /dev-data/fake-components.json. PickerBench.tsx
+// fetches that URL at runtime rather than using a static/dynamic ES
+// import — this keeps the file out of TypeScript's module graph
+// entirely, so tsc never needs it to exist (it's gitignored and absent
+// on a fresh checkout, e.g. a Netlify build).
+const outDir = join(dirname(fileURLToPath(import.meta.url)), "..", "public", "dev-data");
 const outFile = join(outDir, "fake-components.json");
 
 const ADJECTIVES = ["Red", "Blue", "Mini", "Heavy-duty", "Precision", "Universal", "Dual", "Compact"];

@@ -9,7 +9,7 @@ supabase/.branches/
 supabase/snippets/
 
 # generated dev fixture data (scripts/generate-fake-components.mjs)
-dev-data/
+public/dev-data/
 
 # Logs
 logs
