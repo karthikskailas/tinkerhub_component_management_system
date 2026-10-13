@@ -6,6 +6,7 @@ import { SkeletonLines } from "../../../components/ui/Skeleton";
 import { toast } from "../../../components/ui/Toast";
 import { parseSupabaseError } from "../../../lib/errors";
 import { useOnlineStatus } from "../../../lib/useOnlineStatus";
+import { DetailShell } from "../requests/DetailShell";
 import { approveRequest, createScreenshotSignedUrl, fetchRequestDetail, rejectRequest } from "./api";
 import type { PickupCardData, RequestDetail } from "./api";
 import { RejectDialog } from "./RejectDialog";
@@ -111,11 +112,11 @@ export function RequestDetailPanel({
   if (detailQuery.isError || !detailQuery.data) {
     return (
       <DetailShell onClose={onClose}>
-        <p className="text-sm text-red-600">Couldn't load this request.</p>
+        <p className="text-sm text-danger">Couldn't load this request.</p>
         <button
           type="button"
           onClick={() => detailQuery.refetch()}
-          className="mt-2 min-h-11 text-sm font-medium text-indigo-600 underline"
+          className="text-sm font-medium text-accent hover:underline"
         >
           Retry
         </button>
@@ -129,61 +130,61 @@ export function RequestDetailPanel({
 
   return (
     <DetailShell onClose={onClose}>
-      <h2 className="text-lg font-semibold text-slate-900">{detail.requester_name}</h2>
-      <a href={`tel:${detail.phone}`} className="text-sm text-indigo-600 underline">
+      <h2 className="text-lg font-semibold text-foreground">{detail.requester_name}</h2>
+      <a href={`tel:${detail.phone}`} className="text-sm text-accent hover:underline">
         {detail.phone}
       </a>
-      <p className="mt-1 text-xs text-slate-400">
+      <p className="text-sm text-muted">
         Submitted {new Date(detail.created_at).toLocaleString()}
       </p>
 
-      <div className="mt-4">
-        <p className="text-sm font-semibold text-slate-900">
+      <div>
+        <p className="text-sm font-medium text-foreground">
           {detail.project_name ?? "Untitled project"}
         </p>
         {detail.project_description && (
-          <p className="mt-1 text-sm text-slate-600">{detail.project_description}</p>
+          <p className="text-sm text-muted">{detail.project_description}</p>
         )}
       </div>
 
-      <div className="mt-4">
-        <p className="mb-1 text-sm font-semibold text-slate-900">Screenshot</p>
-        {screenshotUrl === "loading" && <p className="text-sm text-slate-500">Loading...</p>}
+      <div className="rounded-xl bg-surface p-4 shadow-surface">
+        <p className="mb-2 text-sm font-semibold text-foreground">Screenshot</p>
+        {screenshotUrl === "loading" && <p className="text-sm text-muted">Loading...</p>}
         {screenshotUrl === null && (
-          <p className="text-sm text-slate-500">Screenshot already deleted.</p>
+          <p className="text-sm text-muted">Screenshot already deleted.</p>
         )}
         {typeof screenshotUrl === "string" && (
-          <button type="button" onClick={() => setZoomOpen(true)} className="block">
+          <button type="button" onClick={() => setZoomOpen(true)}>
             <img
               src={screenshotUrl}
               alt="Request screenshot"
               width={128}
               height={128}
               loading="lazy"
-              className="h-32 w-32 rounded-lg border border-slate-200 object-cover"
+              className="h-32 w-32 rounded-lg object-cover"
             />
           </button>
         )}
       </div>
 
-      <div className="mt-4">
-        <p className="mb-2 text-sm font-semibold text-slate-900">Items</p>
-        <div className="space-y-2">
+      <div className="rounded-xl bg-surface p-4 shadow-surface">
+        <p className="mb-2 text-sm font-semibold text-foreground">Items</p>
+        <div className="flex flex-col gap-3">
           {detail.items.map((item) => {
             const approvedQty = approvedQtys[item.component_id] ?? 0;
             const available = item.count - item.reserved;
             const overAvailable = approvedQty > available;
 
             return (
-              <div key={item.component_id} className="rounded-lg border border-slate-200 p-2.5">
-                <div className="flex items-center justify-between gap-2">
+              <div key={item.component_id} className="flex flex-col gap-1">
+                <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-slate-900">{item.name}</p>
-                    <p className="text-xs text-slate-500">
+                    <p className="truncate text-sm font-medium text-foreground">{item.name}</p>
+                    <p className="text-xs text-muted">
                       {item.location ?? "No location"} · requested {item.qty}
                     </p>
                   </div>
-                  <label className="flex shrink-0 items-center gap-1 text-sm">
+                  <label className="shrink-0">
                     <span className="sr-only">Approved quantity for {item.name}</span>
                     <input
                       type="number"
@@ -198,13 +199,11 @@ export function RequestDetailPanel({
                         );
                         setApprovedQtys((prev) => ({ ...prev, [item.component_id]: clamped }));
                       }}
-                      className="h-9 w-16 rounded-md border border-slate-300 text-center"
+                      className="h-9 w-16 rounded-md border border-field-border bg-field text-center text-sm text-field-foreground"
                     />
                   </label>
                 </div>
-                <p
-                  className={`mt-1 text-xs ${overAvailable ? "font-medium text-amber-600" : "text-slate-400"}`}
-                >
+                <p className={`text-xs ${overAvailable ? "font-medium text-warning" : "text-muted"}`}>
                   {available} available{overAvailable ? " — exceeds availability" : ""}
                 </p>
               </div>
@@ -214,29 +213,27 @@ export function RequestDetailPanel({
       </div>
 
       {notPendingAnymore && (
-        <p className="mt-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
+        <p className="text-sm text-warning">
           This request is no longer pending (status: {detail.status}). It may have just been
           handled elsewhere.
         </p>
       )}
 
       {!isOnline && (
-        <p className="mt-3 text-center text-xs text-amber-600">
+        <p className="text-sm text-warning">
           You're offline — approve/reject are disabled until you reconnect.
         </p>
       )}
 
-      <div className="mt-6 flex gap-2">
+      <div className="flex gap-3">
         <Button
           variant="danger"
-          className="flex-1"
           disabled={notPendingAnymore || approveMutation.isPending || !isOnline}
           onClick={() => setRejectOpen(true)}
         >
           Reject
         </Button>
         <Button
-          className="flex-1"
           disabled={notPendingAnymore || !anyPositive || approveMutation.isPending || !isOnline}
           loading={approveMutation.isPending}
           onClick={() => approveMutation.mutate()}
@@ -258,31 +255,10 @@ export function RequestDetailPanel({
             src={screenshotUrl}
             alt="Request screenshot, zoomed"
             loading="lazy"
-            className="max-h-[85vh] rounded-lg"
+            className="max-h-[80vh] max-w-full rounded-xl object-contain"
           />
         )}
       </Modal>
     </DetailShell>
-  );
-}
-
-function DetailShell({
-  onClose,
-  children,
-}: {
-  onClose: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="fixed inset-0 z-40 overflow-y-auto bg-white p-4 md:static md:z-auto md:w-[420px] md:border-l md:border-slate-200 md:p-4">
-      <button
-        type="button"
-        onClick={onClose}
-        className="mb-3 flex min-h-11 items-center gap-1 text-sm font-medium text-slate-600"
-      >
-        ← Back
-      </button>
-      {children}
-    </div>
   );
 }

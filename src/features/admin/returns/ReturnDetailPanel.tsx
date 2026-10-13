@@ -95,11 +95,11 @@ export function ReturnDetailPanel({ requestId, onClose, onVerified }: ReturnDeta
   if (detailQuery.isError || !detailQuery.data) {
     return (
       <DetailShell onClose={onClose}>
-        <p className="text-sm text-red-600">Couldn't load this request.</p>
+        <p className="text-sm text-danger">Couldn't load this request.</p>
         <button
           type="button"
           onClick={() => detailQuery.refetch()}
-          className="mt-2 min-h-11 text-sm font-medium text-indigo-600 underline"
+          className="text-sm font-medium text-accent hover:underline"
         >
           Retry
         </button>
@@ -147,38 +147,38 @@ export function ReturnDetailPanel({ requestId, onClose, onVerified }: ReturnDeta
 
   return (
     <DetailShell onClose={onClose}>
-      <h2 className="text-lg font-semibold text-slate-900">{detail.requester_name}</h2>
-      <a href={`tel:${detail.phone}`} className="text-sm text-indigo-600 underline">
+      <h2 className="text-lg font-semibold text-foreground">{detail.requester_name}</h2>
+      <a href={`tel:${detail.phone}`} className="text-sm text-accent hover:underline">
         {detail.phone}
       </a>
-      <p className="mt-1 text-sm text-slate-700">{detail.project_name ?? "Untitled project"}</p>
+      <p className="text-sm text-muted">{detail.project_name ?? "Untitled project"}</p>
 
       {outstanding.length > 1 && !notIssued && (
-        <Button variant="secondary" className="mt-3" onClick={markAllOk}>
+        <Button variant="secondary" onClick={markAllOk}>
           Mark all OK
         </Button>
       )}
 
-      <div className="mt-4">
-        <p className="mb-2 text-sm font-semibold text-slate-900">Returnable items</p>
-        <div className="space-y-2">
+      <div className="rounded-xl bg-surface p-4 shadow-surface">
+        <p className="mb-2 text-sm font-semibold text-foreground">Returnable items</p>
+        <div className="flex flex-col gap-4">
           {returnableItems.map((item) => {
             const resolved = item.returned_qty !== null;
             const line = lines[item.component_id];
             return (
-              <div key={item.component_id} className="rounded-lg border border-slate-200 p-2.5">
-                <p className="text-sm font-medium text-slate-900">{item.name}</p>
-                <p className="text-xs text-slate-500">
+              <div key={item.component_id} className="flex flex-col gap-2">
+                <p className="text-sm font-medium text-foreground">{item.name}</p>
+                <p className="text-xs text-muted">
                   {item.location ?? "No location"} · issued {item.issued_qty}
                 </p>
 
                 {resolved ? (
-                  <p className="mt-1 text-xs text-emerald-700">
+                  <p className="text-sm text-muted">
                     Returned {item.returned_qty} · {item.condition}
                     {item.note ? ` · ${item.note}` : ""}
                   </p>
                 ) : (
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <input
                       type="number"
                       min={0}
@@ -192,7 +192,7 @@ export function ReturnDetailPanel({ requestId, onClose, onVerified }: ReturnDeta
                         );
                         updateLine(item.component_id, { returnedQty: clamped });
                       }}
-                      className="h-9 w-16 rounded-md border border-slate-300 text-center"
+                      className="h-9 w-16 rounded-md border border-field-border bg-field text-center text-sm text-field-foreground"
                     />
                     <select
                       value={line?.condition ?? ""}
@@ -202,7 +202,7 @@ export function ReturnDetailPanel({ requestId, onClose, onVerified }: ReturnDeta
                           condition: (e.target.value || null) as ItemCondition | null,
                         })
                       }
-                      className="h-9 min-w-24 rounded-md border border-slate-300 px-1 text-sm"
+                      className="h-9 rounded-md border border-field-border bg-field px-2 text-sm text-field-foreground"
                     >
                       <option value="">Select...</option>
                       <option value="ok">OK</option>
@@ -215,7 +215,7 @@ export function ReturnDetailPanel({ requestId, onClose, onVerified }: ReturnDeta
                       value={line?.note ?? ""}
                       disabled={notIssued}
                       onChange={(e) => updateLine(item.component_id, { note: e.target.value })}
-                      className="h-9 min-w-0 flex-1 rounded-md border border-slate-300 px-2 text-sm"
+                      className="h-9 min-w-0 flex-1 rounded-md border border-field-border bg-field px-2 text-sm text-field-foreground"
                     />
                   </div>
                 )}
@@ -226,11 +226,11 @@ export function ReturnDetailPanel({ requestId, onClose, onVerified }: ReturnDeta
       </div>
 
       {consumedItems.length > 0 && (
-        <div className="mt-4">
-          <p className="mb-2 text-sm font-semibold text-slate-500">Consumed (non-returnable)</p>
-          <div className="space-y-1">
+        <div className="rounded-xl bg-surface p-4 shadow-surface">
+          <p className="mb-2 text-sm font-semibold text-foreground">Consumed (non-returnable)</p>
+          <div className="flex flex-col gap-1">
             {consumedItems.map((item) => (
-              <div key={item.component_id} className="rounded-lg bg-slate-50 p-2 text-sm text-slate-500">
+              <div key={item.component_id} className="text-sm text-muted">
                 {item.name} × {item.issued_qty}
               </div>
             ))}
@@ -239,14 +239,13 @@ export function ReturnDetailPanel({ requestId, onClose, onVerified }: ReturnDeta
       )}
 
       {notIssued && (
-        <p className="mt-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
+        <p className="text-sm text-warning">
           This request is no longer issued (status: {detail.status}).
         </p>
       )}
 
-      <div className="mt-6">
+      <div>
         <Button
-          className="w-full"
           disabled={notIssued || touchedEntries.length === 0 || verifyMutation.isPending || !isOnline}
           onClick={() => setConfirmOpen(true)}
         >
@@ -255,18 +254,18 @@ export function ReturnDetailPanel({ requestId, onClose, onVerified }: ReturnDeta
       </div>
 
       <Modal open={confirmOpen} onClose={() => setConfirmOpen(false)} titleId="confirm-return-title">
-        <h2 id="confirm-return-title" className="text-lg font-semibold text-slate-900">
+        <h2 id="confirm-return-title" className="text-lg font-semibold text-foreground">
           Confirm return
         </h2>
-        <ul className="mt-3 space-y-1 text-sm text-slate-700">
+        <ul className="flex flex-col gap-1 text-sm text-foreground">
           <li>{summary.ok} back in stock</li>
           <li>{summary.damaged} damaged</li>
           <li>{summary.missing} missing</li>
         </ul>
-        <p className="mt-2 text-xs text-slate-500">
+        <p className="text-xs text-muted">
           Damaged and missing items are not added back to stock.
         </p>
-        <div className="mt-4 flex justify-end gap-2">
+        <div className="flex justify-end gap-2">
           <Button variant="secondary" onClick={() => setConfirmOpen(false)} disabled={verifyMutation.isPending}>
             Cancel
           </Button>

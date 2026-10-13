@@ -1,18 +1,21 @@
 import type { ReactNode } from "react";
+import { Modal } from "../../../components/ui/Modal";
 
-// Side panel on desktop, full-screen sheet on mobile — shared by every
-// Review/Issue/Returns/History detail view.
+// A modal overlay — shared by every Review/Issue/Returns/History detail
+// view — instead of stacking the detail below the list, so opening one
+// never grows the page or forces a scroll past the list. Internal content
+// scrolls on its own (capped to the viewport) if it's taller than that.
 export function DetailShell({ onClose, children }: { onClose: () => void; children: ReactNode }) {
   return (
-    <div className="fixed inset-0 z-40 overflow-y-auto bg-white p-4 md:static md:z-auto md:w-[420px] md:border-l md:border-slate-200 md:p-4">
+    <Modal open onClose={onClose} size="xl">
       <button
         type="button"
         onClick={onClose}
-        className="mb-3 flex min-h-11 items-center gap-1 text-sm font-medium text-slate-600"
+        className="self-start text-sm font-medium text-accent hover:underline"
       >
         ← Back
       </button>
       {children}
-    </div>
+    </Modal>
   );
 }

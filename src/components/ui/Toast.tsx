@@ -32,12 +32,6 @@ export const toast = {
   info: (message: string) => push(message, "info"),
 };
 
-const VARIANT_CLASSES: Record<ToastItem["variant"], string> = {
-  error: "bg-red-600 text-white",
-  success: "bg-emerald-600 text-white",
-  info: "bg-slate-800 text-white",
-};
-
 export function Toaster() {
   const [list, setList] = useState<ToastItem[]>(items);
 
@@ -50,13 +44,19 @@ export function Toaster() {
 
   if (list.length === 0) return null;
 
+  const colorByVariant: Record<ToastItem["variant"], string> = {
+    error: "bg-danger text-danger-foreground",
+    success: "bg-success text-success-foreground",
+    info: "bg-surface text-surface-foreground border border-border",
+  };
+
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 flex flex-col items-center gap-2 p-4 sm:items-end">
+    <div className="fixed inset-x-0 bottom-4 z-50 flex flex-col items-center gap-2 px-4 sm:items-end sm:right-4 sm:left-auto">
       {list.map((item) => (
         <div
           key={item.id}
           role="status"
-          className={`w-full max-w-sm rounded-lg px-4 py-3 text-sm shadow-lg ${VARIANT_CLASSES[item.variant]}`}
+          className={`w-full max-w-sm rounded-xl px-4 py-3 text-sm shadow-overlay sm:w-auto ${colorByVariant[item.variant]}`}
         >
           {item.message}
         </div>

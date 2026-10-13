@@ -33,8 +33,8 @@ export function ReturnsPage() {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-57px)] md:flex-row">
-      <div className="flex-1">
+    <div>
+      <div>
         <RequestListShell
           title="Returns"
           countLabel={list.count !== undefined ? `${list.count} awaiting return` : undefined}

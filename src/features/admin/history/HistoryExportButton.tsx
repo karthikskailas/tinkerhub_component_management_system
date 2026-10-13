@@ -61,15 +61,15 @@ export function HistoryExportButton({
       </Button>
 
       {progress && (
-        <div className="absolute right-0 z-20 mt-1 w-64 rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
-          <p className="mb-2 text-xs text-slate-600">
+        <div className="absolute right-0 z-10 mt-2 flex w-64 flex-col gap-2 rounded-xl bg-surface p-4 shadow-overlay">
+          <p className="text-sm text-muted">
             {progress.fetched} of {progress.total || "?"} rows
           </p>
           <ProgressBar progress={{ done: progress.fetched, total: progress.total || 1 }} />
           <button
             type="button"
             onClick={() => abortRef.current?.abort()}
-            className="mt-2 min-h-11 w-full rounded-md text-sm font-medium text-red-600 hover:bg-red-50"
+            className="self-start text-sm font-medium text-danger hover:underline"
           >
             Cancel
           </button>

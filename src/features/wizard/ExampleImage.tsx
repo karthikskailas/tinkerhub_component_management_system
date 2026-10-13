@@ -8,21 +8,21 @@ function ExampleImageModal({ onClose }: { onClose: () => void }) {
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 p-4"
       onClick={onClose}
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-black/80 p-4"
     >
       <img
         src={EXAMPLE_IMAGE_SRC}
         alt="Example TinkerHub project page: title, description, tags, and your name under Collaborators"
         loading="lazy"
-        className="max-h-[80vh] max-w-full rounded-lg object-contain"
         onClick={(e) => e.stopPropagation()}
+        className="max-h-[70vh] max-w-full rounded-xl object-contain"
       />
-      <p className="mt-3 text-sm text-white">Example of a project page</p>
+      <p className="text-sm text-white/80">Example of a project page</p>
       <button
         type="button"
         onClick={onClose}
-        className="mt-4 min-h-11 rounded-lg bg-white px-4 py-2 text-sm font-medium text-slate-900"
+        className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-black"
       >
         Close
       </button>
@@ -33,18 +33,12 @@ function ExampleImageModal({ onClose }: { onClose: () => void }) {
 // Self-contained trigger + modal so both the guide screen (tap-to-zoom
 // thumbnail) and the details step ("See example" link) can reuse the exact
 // same zoomed view without lifting any state up to their parents.
-export function ExampleImageTrigger({
-  className,
-  children,
-}: {
-  className?: string;
-  children: ReactNode;
-}) {
+export function ExampleImageTrigger({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
 
   return (
     <>
-      <button type="button" className={className} onClick={() => setOpen(true)}>
+      <button type="button" onClick={() => setOpen(true)} className="text-left">
         {children}
       </button>
       {open && <ExampleImageModal onClose={() => setOpen(false)} />}
@@ -52,23 +46,23 @@ export function ExampleImageTrigger({
   );
 }
 
-export function ExampleImageThumbnail({ className }: { className?: string }) {
+export function ExampleImageThumbnail() {
   return (
-    <ExampleImageTrigger className={`block w-full text-left ${className ?? ""}`}>
+    <ExampleImageTrigger>
       <img
         src={EXAMPLE_IMAGE_SRC}
         alt="Example TinkerHub project page — tap to zoom"
         loading="lazy"
-        className="w-full rounded-lg border border-slate-200 object-cover"
         onError={(e) => {
           e.currentTarget.style.display = "none";
           e.currentTarget.nextElementSibling?.classList.remove("hidden");
         }}
+        className="w-full rounded-xl border border-border object-cover"
       />
-      <div className="hidden rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-400">
+      <div className="hidden rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted">
         Example image not available yet
       </div>
-      <p className="mt-1 text-center text-xs text-slate-500">Example of a project page</p>
+      <p className="mt-1 text-center text-xs text-muted">Example of a project page</p>
     </ExampleImageTrigger>
   );
 }

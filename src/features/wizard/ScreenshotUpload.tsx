@@ -63,15 +63,15 @@ export function ScreenshotUpload({
   }
 
   return (
-    <div>
-      <div className="mb-1 flex items-center justify-between gap-2">
-        <span className="block text-sm font-medium text-slate-700">{label}</span>
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm font-medium text-foreground">{label}</span>
         {labelExtra}
       </div>
-      {helperText && <p className="mb-2 text-xs text-slate-500">{helperText}</p>}
+      {helperText && <p className="text-xs text-muted">{helperText}</p>}
 
       {path && (
-        <div className="mb-2 flex items-center gap-3 rounded-lg border border-slate-200 p-2">
+        <div className="flex items-center gap-3 rounded-xl bg-surface p-3 shadow-surface">
           {previewUrl ? (
             <img
               src={previewUrl}
@@ -79,18 +79,18 @@ export function ScreenshotUpload({
               width={64}
               height={64}
               loading="lazy"
-              className="h-16 w-16 rounded-md object-cover"
+              className="h-16 w-16 rounded-lg object-cover"
             />
           ) : (
-            <div className="flex h-16 w-16 items-center justify-center rounded-md bg-slate-100 text-xs text-slate-500">
+            <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-default text-xs text-muted">
               Saved
             </div>
           )}
-          <div className="flex-1 text-sm text-slate-600">Screenshot attached</div>
+          <div className="flex-1 text-sm text-muted">Screenshot attached</div>
           <button
             type="button"
             onClick={remove}
-            className="min-h-11 rounded-md px-3 text-sm font-medium text-red-600 hover:bg-red-50"
+            className="text-sm font-medium text-danger hover:underline"
           >
             Remove
           </button>
@@ -98,22 +98,22 @@ export function ScreenshotUpload({
       )}
 
       {!path && (
-        <label className="flex min-h-24 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-slate-300 px-4 py-6 text-center text-sm text-slate-500 hover:border-indigo-400">
+        <label className="flex min-h-24 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-border bg-surface px-4 py-6 text-center shadow-surface">
           {uploading ? (
-            "Uploading..."
+            <span className="text-sm text-muted">Uploading...</span>
           ) : (
-            <span>
+            <span className="text-sm font-medium text-accent">
               Tap to choose a screenshot
               <input
                 ref={inputRef}
                 type="file"
                 accept="image/*"
-                className="hidden"
                 disabled={uploading}
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) void handleFile(file);
                 }}
+                className="hidden"
               />
             </span>
           )}

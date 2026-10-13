@@ -1,8 +1,8 @@
 export function ProgressBar({ progress }: { progress: { done: number; total: number } }) {
   const pct = progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0;
   return (
-    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
-      <div className="h-full rounded-full bg-indigo-600 transition-all" style={{ width: `${pct}%` }} />
+    <div className="h-2 w-full overflow-hidden rounded-full bg-default">
+      <div className="h-full rounded-full bg-accent transition-[width]" style={{ width: `${pct}%` }} />
     </div>
   );
 }
@@ -19,13 +19,15 @@ export function SummaryCard({
   warn?: boolean;
 }) {
   return (
-    <div className="rounded-lg border border-slate-200 p-2.5 text-center">
+    <div className="rounded-xl bg-surface p-3 text-center shadow-surface">
       <p
-        className={`text-lg font-semibold ${warn ? "text-red-600" : muted ? "text-slate-400" : "text-slate-900"}`}
+        data-muted={muted}
+        data-warn={warn}
+        className={`text-xl font-semibold ${warn ? "text-danger" : muted ? "text-muted" : "text-foreground"}`}
       >
         {value}
       </p>
-      <p className="text-xs text-slate-500">{label}</p>
+      <p className="text-xs text-muted">{label}</p>
     </div>
   );
 }

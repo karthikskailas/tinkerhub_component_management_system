@@ -27,20 +27,20 @@ export function PickerBench() {
 
   if (error) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-6 text-sm text-red-600">
+      <div>
         No fixture data found. Run <code>node scripts/generate-fake-components.mjs</code> first.
       </div>
     );
   }
 
   if (!items) {
-    return <div className="mx-auto max-w-lg px-4 py-6 text-sm text-slate-500">Loading fixture data...</div>;
+    return <div>Loading fixture data...</div>;
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-6">
-      <h1 className="mb-1 text-lg font-semibold text-slate-900">Picker bench</h1>
-      <p className="mb-4 text-xs text-slate-500">
+    <div>
+      <h1>Picker bench</h1>
+      <p>
         {items.length} fake rows · loaded in {renderMs?.toFixed(1)}ms · {Object.keys(cart).length}{" "}
         selected
       </p>

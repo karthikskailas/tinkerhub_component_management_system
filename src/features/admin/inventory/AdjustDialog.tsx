@@ -55,14 +55,14 @@ export function AdjustDialog({ component, onClose, onAdjusted }: AdjustDialogPro
     <Modal open={!!component} onClose={handleClose} titleId="adjust-dialog-title">
       {component && (
         <>
-          <h2 id="adjust-dialog-title" className="text-lg font-semibold text-slate-900">
+          <h2 id="adjust-dialog-title" className="text-lg font-semibold text-foreground">
             Adjust {component.name}
           </h2>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="text-sm text-muted">
             Current count {component.count} · reserved {component.reserved}
           </p>
 
-          <div className="mt-4 space-y-4">
+          <div className="flex flex-col gap-4">
             <Input
               label="New count"
               type="number"
@@ -82,7 +82,7 @@ export function AdjustDialog({ component, onClose, onAdjusted }: AdjustDialogPro
             />
           </div>
 
-          <div className="mt-4 flex justify-end gap-2">
+          <div className="flex justify-end gap-2">
             <Button variant="secondary" onClick={handleClose} disabled={mutation.isPending}>
               Cancel
             </Button>

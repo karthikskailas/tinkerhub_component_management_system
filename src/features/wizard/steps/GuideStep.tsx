@@ -6,62 +6,64 @@ const CHECKLIST = ["Your project title", "Your project description", "Your name 
 
 export function GuideStep({ onBack, onContinue }: { onBack: () => void; onContinue: () => void }) {
   return (
-    <div>
-      <h1 className="mb-1 text-xl font-semibold text-slate-900">
-        Add your project on the TinkerHub app first
-      </h1>
-      <p className="mb-4 text-sm text-slate-500">
-        Come back here once it's added, then continue to add your details.
-      </p>
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-1.5">
+        <h1 className="text-xl font-semibold text-foreground">
+          Add your project on the TinkerHub app first
+        </h1>
+        <p className="text-sm text-muted">
+          Come back here once it's added, then continue to add your details.
+        </p>
+      </div>
 
       {TINKERHUB_URL && (
         <a
           href={TINKERHUB_URL}
           target="_blank"
           rel="noreferrer"
-          className="mb-4 inline-block min-h-11 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white"
+          className="self-start rounded-lg bg-accent-soft px-4 py-2 text-sm font-medium text-accent-soft-foreground"
         >
           Open TinkerHub
         </a>
       )}
 
-      <ol className="mb-5 space-y-3">
+      <ol className="flex flex-col gap-3">
         {GUIDE_STEPS.map((step, i) => (
-          <li key={step.title} className="flex gap-3 rounded-lg border border-slate-200 p-3">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700">
+          <li key={step.title} className="flex gap-3">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-default text-xs font-semibold text-foreground">
               {i + 1}
             </span>
             <div>
-              <p className="text-sm font-medium text-slate-900">{step.title}</p>
-              <p className="text-sm text-slate-600">{step.body}</p>
+              <p className="text-sm font-medium text-foreground">{step.title}</p>
+              <p className="text-sm text-muted">{step.body}</p>
             </div>
           </li>
         ))}
       </ol>
 
-      <div className="mb-5 rounded-lg border border-slate-200 p-3">
-        <p className="mb-2 text-sm font-semibold text-slate-900">
-          What your screenshot must show
-        </p>
-        <ul className="space-y-1">
+      <div className="rounded-xl bg-surface p-4 shadow-surface">
+        <p className="mb-2 text-sm font-semibold text-foreground">What your screenshot must show</p>
+        <ul className="flex flex-col gap-1.5">
           {CHECKLIST.map((item) => (
-            <li key={item} className="flex items-center gap-2 text-sm text-slate-700">
-              <span className="text-emerald-600">✓</span>
+            <li key={item} className="flex items-center gap-2 text-sm text-muted">
+              <span className="text-success">✓</span>
               {item}
             </li>
           ))}
         </ul>
       </div>
 
-      <div className="mb-6">
+      <div className="[&_button]:block [&_button]:w-full">
         <ExampleImageThumbnail />
       </div>
 
-      <div className="flex justify-between">
-        <Button variant="secondary" onClick={onBack}>
+      <div className="flex gap-3">
+        <Button variant="secondary" onClick={onBack} className="shrink-0 rounded-full">
           Back
         </Button>
-        <Button onClick={onContinue}>I've added my project, continue</Button>
+        <Button onClick={onContinue} className="flex-1 rounded-full">
+          Continue →
+        </Button>
       </div>
     </div>
   );

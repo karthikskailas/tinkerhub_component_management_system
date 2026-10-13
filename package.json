@@ -12,6 +12,8 @@
     "db:types": "npx supabase gen types typescript --project-id uqbekakecjhyliugkhxc > src/types/database.types.ts"
   },
   "dependencies": {
+    "@heroui/react": "^3.2.6",
+    "@heroui/styles": "^3.2.6",
     "@hookform/resolvers": "^5.9.1",
     "@marsidev/react-turnstile": "^1.6.1",
     "@supabase/supabase-js": "^2.117.3",

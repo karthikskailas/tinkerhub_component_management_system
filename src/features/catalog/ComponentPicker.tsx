@@ -60,23 +60,23 @@ export function ComponentPicker({ items, cart, onChange }: ComponentPickerProps)
   }
 
   return (
-    <div>
+    <div className="flex flex-col gap-3">
       <input
         type="search"
         inputMode="search"
         placeholder="Search components..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="mb-3 min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-base outline-none focus:ring-2 focus:ring-indigo-500"
+        className="min-h-11 w-full rounded-lg border border-field-border bg-field px-3 text-base text-field-foreground outline-none focus:border-field-border-focus"
       />
 
       {atLimit && (
-        <p className="mb-2 text-xs text-amber-600">
+        <p className="text-sm text-warning">
           You've reached the 50-component limit for a single request.
         </p>
       )}
 
-      <div ref={scrollRef} className="h-96 overflow-y-auto rounded-lg border border-slate-200">
+      <div ref={scrollRef} className="h-[min(60vh,480px)] overflow-y-auto rounded-xl bg-surface shadow-surface">
         <div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
           {virtualizer.getVirtualItems().map((virtualRow) => {
             const item = filtered[virtualRow.index];
@@ -94,31 +94,21 @@ export function ComponentPicker({ items, cart, onChange }: ComponentPickerProps)
                   height: virtualRow.size,
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
-                className="flex items-center gap-3 border-b border-slate-100 px-3"
+                className="flex items-center gap-2 border-b border-border px-3"
               >
                 <button
                   type="button"
                   disabled={outOfStock || (atLimit && !selected)}
                   onClick={() => (selected ? deselect(item.id) : select(item))}
-                  className={`flex min-h-11 flex-1 items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left disabled:cursor-not-allowed disabled:opacity-50 ${
-                    selected ? "bg-indigo-50" : ""
-                  }`}
+                  className="flex min-h-11 flex-1 items-center justify-between gap-2 rounded-md py-1.5 text-left disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium text-slate-900">
-                      {item.name}
-                    </span>
+                  <span className="flex min-w-0 flex-col">
+                    <span className="truncate text-sm font-medium text-foreground">{item.name}</span>
                     {item.description && (
-                      <span className="block truncate text-xs text-slate-500">
-                        {item.description}
-                      </span>
+                      <span className="truncate text-xs text-muted">{item.description}</span>
                     )}
                   </span>
-                  <span
-                    className={`shrink-0 text-xs font-medium ${
-                      outOfStock ? "text-red-500" : "text-slate-500"
-                    }`}
-                  >
+                  <span className="shrink-0 text-xs font-medium text-muted">
                     {outOfStock ? "Out of stock" : `${item.available} available`}
                   </span>
                 </button>
@@ -154,7 +144,7 @@ function QtyStepper({
         type="button"
         aria-label="Decrease quantity"
         onClick={() => onChange(qty - 1)}
-        className="flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 text-lg"
+        className="flex h-8 w-8 items-center justify-center rounded-md bg-default text-foreground"
       >
         −
       </button>
@@ -165,13 +155,13 @@ function QtyStepper({
         max={max}
         value={qty}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="h-9 w-12 rounded-md border border-slate-300 text-center text-sm"
+        className="h-8 w-12 rounded-md border border-field-border bg-field text-center text-sm text-field-foreground"
       />
       <button
         type="button"
         aria-label="Increase quantity"
         onClick={() => onChange(qty + 1)}
-        className="flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 text-lg"
+        className="flex h-8 w-8 items-center justify-center rounded-md bg-default text-foreground"
       >
         +
       </button>

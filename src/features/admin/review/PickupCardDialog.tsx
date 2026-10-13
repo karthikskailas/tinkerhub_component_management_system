@@ -9,18 +9,18 @@ interface PickupCardDialogProps {
 
 export function PickupCardDialog({ data, onClose }: PickupCardDialogProps) {
   return (
-    <Modal open={!!data} onClose={onClose} widthClassName="max-w-xl" titleId="pickup-card-title">
+    <Modal open={!!data} onClose={onClose} titleId="pickup-card-title">
       {data && (
         <>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 id="pickup-card-title" className="sr-only">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h2 id="pickup-card-title" className="text-lg font-semibold text-foreground">
               Component pickup card
             </h2>
             <button
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="ml-auto flex min-h-11 min-w-11 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-default"
             >
               ✕
             </button>

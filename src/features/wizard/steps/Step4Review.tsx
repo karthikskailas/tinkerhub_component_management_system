@@ -66,21 +66,21 @@ export function Step4Review({ draft, onBack, onEditStep, onSubmitted }: Step4Pro
   const cartLines = Object.values(draft.cart);
 
   return (
-    <div>
-      <h1 className="mb-4 text-xl font-semibold text-slate-900">Review &amp; submit</h1>
+    <div className="flex flex-col gap-4">
+      <h1 className="text-xl font-semibold text-foreground">Review &amp; submit</h1>
 
       <Section title="Your details" onEdit={() => onEditStep(2)}>
-        <p className="text-sm text-slate-700">{draft.requesterName}</p>
-        <p className="text-sm text-slate-700">{draft.phone}</p>
+        <p className="text-sm text-foreground">{draft.requesterName}</p>
+        <p className="text-sm text-muted">{draft.phone}</p>
       </Section>
 
       <Section title="Project" onEdit={() => onEditStep(1)}>
         {draft.path === "registered" ? (
-          <p className="text-sm text-slate-700">{draft.selectedProjectName}</p>
+          <p className="text-sm text-foreground">{draft.selectedProjectName}</p>
         ) : (
           <>
-            <p className="text-sm font-medium text-slate-800">{draft.newProject?.name}</p>
-            <p className="text-sm text-slate-600">{draft.newProject?.description}</p>
+            <p className="text-sm text-foreground">{draft.newProject?.name}</p>
+            <p className="text-sm text-muted">{draft.newProject?.description}</p>
           </>
         )}
       </Section>
@@ -93,34 +93,35 @@ export function Step4Review({ draft, onBack, onEditStep, onSubmitted }: Step4Pro
             width={96}
             height={96}
             loading="lazy"
-            className="h-24 w-24 rounded-md object-cover"
+            className="h-24 w-24 rounded-lg object-cover"
           />
         ) : (
-          <p className="text-sm text-slate-500">Loading preview...</p>
+          <p className="text-sm text-muted">Loading preview...</p>
         )}
       </Section>
 
       <Section title={`Components (${cartLines.length})`} onEdit={() => onEditStep(3)}>
-        <ul className="space-y-1">
+        <ul className="flex flex-col gap-1">
           {cartLines.map((line) => (
-            <li key={line.id} className="flex justify-between text-sm text-slate-700">
-              <span>{line.name}</span>
-              <span className="font-medium">× {line.qty}</span>
+            <li key={line.id} className="flex items-center justify-between text-sm">
+              <span className="text-foreground">{line.name}</span>
+              <span className="text-muted">× {line.qty}</span>
             </li>
           ))}
         </ul>
       </Section>
 
-      <div className="mt-6 flex justify-between">
-        <Button variant="secondary" onClick={onBack} disabled={mutation.isPending}>
+      <div className="flex gap-3">
+        <Button variant="secondary" onClick={onBack} disabled={mutation.isPending} className="shrink-0 rounded-full">
           Back
         </Button>
         <Button
           onClick={() => mutation.mutate()}
           loading={mutation.isPending}
           disabled={!isOnline}
+          className="flex-1 rounded-full"
         >
-          {isOnline ? "Submit for review" : "Offline"}
+          {isOnline ? "Submit for review →" : "Offline"}
         </Button>
       </div>
     </div>
@@ -137,10 +138,10 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mb-4 rounded-lg border border-slate-200 p-3">
-      <div className="mb-1 flex items-center justify-between">
-        <span className="text-sm font-semibold text-slate-900">{title}</span>
-        <button type="button" onClick={onEdit} className="text-xs font-medium text-indigo-600">
+    <div className="flex flex-col gap-1.5 rounded-xl bg-surface p-4 shadow-surface">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-semibold text-foreground">{title}</span>
+        <button type="button" onClick={onEdit} className="text-xs font-medium text-accent hover:underline">
           Edit
         </button>
       </div>

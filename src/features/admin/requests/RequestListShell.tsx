@@ -1,3 +1,4 @@
+import { Input as HeroInput } from "@heroui/react";
 import type { ReactNode } from "react";
 import { Button } from "../../../components/ui/Button";
 import { SkeletonLines } from "../../../components/ui/Skeleton";
@@ -45,43 +46,43 @@ export function RequestListShell<T>({
   onLoadMore,
 }: RequestListShellProps<T>) {
   return (
-    <div className="px-4 py-4">
-      <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900">{title}</h1>
-          {countLabel && <p className="text-sm text-slate-500">{countLabel}</p>}
+          <h1 className="text-xl font-semibold text-foreground">{title}</h1>
+          {countLabel && <p className="text-sm text-muted">{countLabel}</p>}
         </div>
-        {headerActions && <div className="flex flex-wrap gap-2">{headerActions}</div>}
+        {headerActions && <div className="flex items-center gap-2">{headerActions}</div>}
       </div>
 
-      <input
+      <HeroInput
         type="search"
         inputMode="search"
         placeholder={searchPlaceholder}
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
-        className="mb-3 min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-base outline-none focus:ring-2 focus:ring-indigo-500"
+        fullWidth
       />
 
-      {filters && <div className="mb-3">{filters}</div>}
+      {filters && <div className="flex flex-wrap gap-2">{filters}</div>}
 
       {isLoading && <SkeletonLines count={6} />}
 
       {isError && (
-        <p className="text-sm text-red-600">
+        <p className="text-sm text-danger">
           Couldn't load this list.{" "}
-          <button type="button" className="underline" onClick={onRetry}>
+          <button type="button" onClick={onRetry} className="font-medium underline">
             Retry
           </button>
         </p>
       )}
 
       {!isLoading && !isError && rows.length === 0 && (
-        <p className="py-12 text-center text-sm text-slate-400">{emptyMessage}</p>
+        <p className="rounded-xl bg-surface p-6 text-center text-sm text-muted shadow-surface">{emptyMessage}</p>
       )}
 
       {rows.length > 0 && (
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           {rows.map((row) => (
             <div key={rowKey(row)}>{renderRow(row)}</div>
           ))}
@@ -89,7 +90,7 @@ export function RequestListShell<T>({
       )}
 
       {hasNextPage && (
-        <div className="mt-4 text-center">
+        <div className="flex justify-center pt-2">
           <Button variant="secondary" loading={isFetchingNextPage} onClick={onLoadMore}>
             Load more
           </Button>

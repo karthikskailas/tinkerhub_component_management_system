@@ -81,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{ user, isAnonymous: user?.is_anonymous ?? false, ready, error, retry }}
     >
       {needsCaptcha && TURNSTILE_SITE_KEY && (
-        <div className="hidden">
+        <div>
           <Turnstile
             siteKey={TURNSTILE_SITE_KEY}
             options={{ size: "invisible" }}

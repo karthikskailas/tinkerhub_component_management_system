@@ -41,12 +41,12 @@ export function ScanCodeInput({ onFound }: ScanCodeInputProps) {
         placeholder="Scan or enter code"
         value={code}
         onChange={(e) => setCode(e.target.value)}
-        className="min-h-11 w-40 rounded-lg border border-slate-300 px-3 py-2.5 text-sm uppercase outline-none focus:ring-2 focus:ring-indigo-500"
+        className="min-h-11 w-40 rounded-lg border border-field-border bg-field px-3 text-sm uppercase text-field-foreground outline-none focus:border-field-border-focus sm:w-56"
       />
       <button
         type="submit"
         disabled={busy || !code.trim()}
-        className="min-h-11 rounded-lg bg-slate-100 px-3 text-sm font-medium text-slate-700 disabled:opacity-50"
+        className="rounded-lg bg-accent px-4 text-sm font-medium text-accent-foreground disabled:opacity-50"
       >
         Go
       </button>

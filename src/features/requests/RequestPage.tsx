@@ -49,23 +49,27 @@ export function RequestPage() {
 
   if (query.isLoading) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-6">
-        <SkeletonLines count={5} />
+      <div className="min-h-dvh bg-white sm:bg-background sm:px-4 sm:py-6">
+        <div className="mx-auto w-full max-w-lg p-6 sm:rounded-3xl sm:bg-surface sm:p-8 sm:shadow-surface">
+          <SkeletonLines count={5} />
+        </div>
       </div>
     );
   }
 
   if (query.isError || !query.data) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-6 text-center">
-        <p className="text-sm text-red-600">Couldn't load this request.</p>
-        <button
-          type="button"
-          className="mt-2 text-sm font-medium text-indigo-600 underline"
-          onClick={() => query.refetch()}
-        >
-          Retry
-        </button>
+      <div className="min-h-dvh bg-white sm:bg-background sm:px-4 sm:py-6">
+        <div className="mx-auto flex w-full max-w-lg flex-col items-center gap-3 p-6 text-center sm:rounded-3xl sm:bg-surface sm:p-8 sm:shadow-surface">
+          <p className="text-sm text-danger">Couldn't load this request.</p>
+          <button
+            type="button"
+            onClick={() => query.refetch()}
+            className="text-sm font-medium text-accent hover:underline"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }

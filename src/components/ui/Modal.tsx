@@ -12,7 +12,8 @@ interface ModalProps {
   /** "card" (default): white rounded card, for forms/content.
    *  "bare": no chrome, for an image viewer over a dark backdrop. */
   variant?: "card" | "bare";
-  widthClassName?: string;
+  /** "md" (default): typical form width. "xl": wide, for data grids/tables. */
+  size?: "md" | "xl";
 }
 
 // Shared modal shell: Escape to close, backdrop click to close, and a tab
@@ -23,9 +24,16 @@ export function Modal({
   children,
   titleId,
   variant = "card",
-  widthClassName = "max-w-lg",
+  size = "md",
 }: ModalProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  // Keeps the keydown handler below reading the latest onClose without
+  // needing it in the effect's dependency array — onClose is a fresh
+  // function identity on every parent render, and putting it in the deps
+  // would re-run the effect (and steal focus back to the first field) on
+  // every keystroke anywhere in the modal.
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!open) return;
@@ -38,7 +46,7 @@ export function Modal({
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
         e.stopPropagation();
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (e.key !== "Tab" || !container) return;
@@ -62,7 +70,8 @@ export function Modal({
       document.removeEventListener("keydown", onKeyDown, true);
       previouslyFocused?.focus();
     };
-  }, [open, onClose]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   if (!open) return null;
 
@@ -71,17 +80,20 @@ export function Modal({
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      data-variant={variant}
       onClick={onClose}
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
     >
       <div
         ref={containerRef}
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
         className={
-          variant === "card"
-            ? `w-full ${widthClassName} max-h-[90vh] overflow-y-auto rounded-xl bg-white p-5 shadow-xl outline-none`
-            : "max-h-[90vh] max-w-full outline-none"
+          variant === "bare"
+            ? "max-h-[90vh] max-w-full overflow-auto"
+            : `flex max-h-[90vh] w-full flex-col gap-4 overflow-y-auto rounded-t-2xl bg-surface p-5 text-surface-foreground shadow-overlay sm:w-full sm:rounded-2xl ${
+                size === "xl" ? "sm:max-w-3xl" : "sm:max-w-lg"
+              }`
         }
       >
         {children}

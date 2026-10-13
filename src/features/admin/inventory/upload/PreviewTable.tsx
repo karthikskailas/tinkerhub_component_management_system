@@ -15,11 +15,11 @@ export function PreviewTable({ rows }: { rows: UploadPreviewRow[] }) {
   });
 
   if (rows.length === 0) {
-    return <p className="py-6 text-center text-sm text-slate-400">No rows in this category.</p>;
+    return <p className="rounded-xl bg-background p-4 text-center text-sm text-muted">No rows in this category.</p>;
   }
 
   return (
-    <div ref={scrollRef} className="h-80 overflow-y-auto rounded-lg border border-slate-200">
+    <div ref={scrollRef} className="h-[min(40vh,320px)] overflow-y-auto rounded-xl bg-background">
       <div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
         {virtualizer.getVirtualItems().map((virtualRow) => {
           const row = rows[virtualRow.index];
@@ -34,28 +34,26 @@ export function PreviewTable({ rows }: { rows: UploadPreviewRow[] }) {
                 height: virtualRow.size,
                 transform: `translateY(${virtualRow.start}px)`,
               }}
-              className="flex items-center gap-3 border-b border-slate-100 px-3 text-sm"
+              className="flex items-center gap-3 border-b border-border px-3"
             >
-              <span className="w-10 shrink-0 text-xs text-slate-400">#{row.rowNumber}</span>
+              <span className="text-xs text-muted">#{row.rowNumber}</span>
               <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-slate-900">{row.name}</p>
-                {row.location && <p className="truncate text-xs text-slate-500">{row.location}</p>}
+                <p className="truncate text-sm font-medium text-foreground">{row.name}</p>
+                {row.location && <p className="truncate text-xs text-muted">{row.location}</p>}
               </div>
               {row.diff === "changed" || row.diff === "unchanged" || row.diff === "new" ? (
-                <span className="shrink-0 text-right text-slate-600">
+                <span className="shrink-0 text-sm text-foreground">
                   {row.diff === "new" ? (
                     row.newCount
                   ) : (
                     <>
-                      <span className="text-slate-400">{row.oldCount}</span> →{" "}
-                      <span className="font-medium">{row.newCount}</span>
+                      <span className="text-muted">{row.oldCount}</span> →{" "}
+                      <span>{row.newCount}</span>
                     </>
                   )}
                 </span>
               ) : (
-                <span className="max-w-[50%] shrink-0 truncate text-right text-xs text-red-600">
-                  {row.reason}
-                </span>
+                <span className="shrink-0 text-xs text-danger">{row.reason}</span>
               )}
             </div>
           );

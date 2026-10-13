@@ -1,3 +1,4 @@
+import { Spinner } from "@heroui/react";
 import { BrowserRouter } from "react-router-dom";
 import { OfflineBanner } from "./components/ui/OfflineBanner";
 import { Toaster } from "./components/ui/Toast";
@@ -10,12 +11,12 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
   if (error) {
     return (
-      <div className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center px-4 text-center">
-        <p className="mb-3 text-sm text-red-600">Couldn't sign you in: {error}</p>
+      <div className="mx-auto flex min-h-dvh max-w-lg flex-col items-center justify-center gap-3 px-4 text-center">
+        <p className="text-sm text-danger">Couldn't sign you in: {error}</p>
         <button
           type="button"
           onClick={retry}
-          className="min-h-11 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white"
+          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground"
         >
           Retry
         </button>
@@ -25,9 +26,8 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
   if (!ready) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-6">
-        <div className="h-4 w-1/3 animate-pulse rounded-md bg-slate-200" />
-        <div className="mt-4 h-24 animate-pulse rounded-lg bg-slate-200" />
+      <div className="flex min-h-dvh items-center justify-center">
+        <Spinner size="lg" />
       </div>
     );
   }

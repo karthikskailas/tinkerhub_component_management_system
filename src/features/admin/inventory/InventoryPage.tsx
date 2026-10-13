@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "../../../components/ui/Button";
 import { SkeletonLines } from "../../../components/ui/Skeleton";
 import { AdjustDialog } from "./AdjustDialog";
-import { ComponentRow, GRID_COLS } from "./ComponentRow";
+import { ComponentRow } from "./ComponentRow";
 import { ExportMenu } from "./ExportMenu";
 import { HistoryDrawer } from "./HistoryDrawer";
 import { useComponents, useComponentsMeta, useInvalidateComponents } from "./useComponents";
@@ -35,18 +35,18 @@ export function InventoryPage() {
   }
 
   return (
-    <div className="px-4 py-4">
-      <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900">Inventory</h1>
-          <p className="text-sm text-slate-500">
+          <h1 className="text-xl font-semibold text-foreground">Inventory</h1>
+          <p className="text-sm text-muted">
             {meta.data ? `${meta.data.total} components` : "—"}
             {meta.data?.lastUpdated && (
               <> · updated {new Date(meta.data.lastUpdated).toLocaleString()}</>
             )}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <ExportMenu search={search} filter={filter} />
           <Button variant="secondary" onClick={() => setUploadOpen(true)}>
             Upload sheet
@@ -61,17 +61,17 @@ export function InventoryPage() {
         placeholder="Search by name or location..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="mb-3 min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-base outline-none focus:ring-2 focus:ring-indigo-500"
+        className="min-h-11 w-full rounded-lg border border-field-border bg-field px-3 text-base text-field-foreground outline-none focus:border-field-border-focus"
       />
 
-      <div className="mb-3 flex gap-1 overflow-x-auto rounded-lg bg-slate-100 p-1">
+      <div className="flex flex-wrap gap-2">
         {FILTERS.map((f) => (
           <button
             key={f.key}
             type="button"
             onClick={() => setFilter(f.key)}
-            className={`min-h-11 flex-1 whitespace-nowrap rounded-md px-3 text-sm font-medium ${
-              filter === f.key ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"
+            className={`rounded-full px-3 py-1.5 text-sm font-medium ${
+              filter === f.key ? "bg-accent text-accent-foreground" : "bg-surface text-muted shadow-surface"
             }`}
           >
             {f.label}
@@ -82,17 +82,17 @@ export function InventoryPage() {
       {components.isLoading && <SkeletonLines count={8} />}
 
       {components.isError && (
-        <p className="text-sm text-red-600">
+        <p className="text-sm text-danger">
           Couldn't load components.{" "}
-          <button type="button" className="underline" onClick={() => components.refetch()}>
+          <button type="button" onClick={() => components.refetch()} className="font-medium underline">
             Retry
           </button>
         </p>
       )}
 
       {!components.isLoading && !components.isError && components.rows.length === 0 && (
-        <div className="py-12 text-center">
-          <p className="mb-3 text-sm text-slate-400">
+        <div className="flex flex-col items-center gap-3 rounded-xl bg-surface p-6 text-center shadow-surface">
+          <p className="text-sm text-muted">
             {search || filter !== "all" ? "No components match." : "No components yet."}
           </p>
           {!search && filter === "all" && (
@@ -102,15 +102,13 @@ export function InventoryPage() {
       )}
 
       {components.rows.length > 0 && (
-        <div className="overflow-hidden rounded-lg border border-slate-200">
-          <div
-            className={`hidden grid-cols-1 gap-2 border-b border-slate-200 bg-slate-50 p-3 text-xs font-medium text-slate-500 sm:grid ${GRID_COLS}`}
-          >
+        <div className="overflow-hidden rounded-xl bg-surface shadow-surface">
+          <div className="hidden grid-cols-[1.5fr_1fr_70px_70px_70px_90px] gap-2 border-b border-border bg-background px-3 py-2 text-xs font-medium text-muted sm:grid">
             <span>Name</span>
             <span>Location</span>
-            <span className="text-right">Count</span>
-            <span className="text-right">Reserved</span>
-            <span className="text-right">Available</span>
+            <span>Count</span>
+            <span>Reserved</span>
+            <span>Available</span>
             <span />
           </div>
           {components.rows.map((component) => (
@@ -125,7 +123,7 @@ export function InventoryPage() {
       )}
 
       {components.hasNextPage && (
-        <div className="mt-4 text-center">
+        <div className="flex justify-center pt-2">
           <Button
             variant="secondary"
             loading={components.isFetchingNextPage}

@@ -94,11 +94,11 @@ export function IssueDetailPanel({ requestId, onClose, onIssued }: IssueDetailPa
   if (detailQuery.isError || !detailQuery.data) {
     return (
       <DetailShell onClose={onClose}>
-        <p className="text-sm text-red-600">Couldn't load this request.</p>
+        <p className="text-sm text-danger">Couldn't load this request.</p>
         <button
           type="button"
           onClick={() => detailQuery.refetch()}
-          className="mt-2 min-h-11 text-sm font-medium text-indigo-600 underline"
+          className="text-sm font-medium text-accent hover:underline"
         >
           Retry
         </button>
@@ -114,63 +114,60 @@ export function IssueDetailPanel({ requestId, onClose, onIssued }: IssueDetailPa
 
   return (
     <DetailShell onClose={onClose}>
-      <h2 className="text-lg font-semibold text-slate-900">{detail.requester_name}</h2>
-      <a href={`tel:${detail.phone}`} className="text-sm text-indigo-600 underline">
+      <h2 className="text-lg font-semibold text-foreground">{detail.requester_name}</h2>
+      <a href={`tel:${detail.phone}`} className="text-sm text-accent hover:underline">
         {detail.phone}
       </a>
-      <p className="mt-1 text-sm text-slate-700">{detail.project_name ?? "Untitled project"}</p>
+      <p className="text-sm text-muted">{detail.project_name ?? "Untitled project"}</p>
 
-      <div className="mt-4">
-        <p className="mb-2 text-sm font-semibold text-slate-900">Items to issue</p>
-        <div className="space-y-2">
+      <div className="rounded-xl bg-surface p-4 shadow-surface">
+        <p className="mb-2 text-sm font-semibold text-foreground">Items to issue</p>
+        <div className="flex flex-col gap-3">
           {approvedLines.map((item) => (
-            <div key={item.component_id} className="rounded-lg border border-slate-200 p-2.5">
-              <div className="flex items-center justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-slate-900">{item.name}</p>
-                  <p className="text-xs text-slate-500">
-                    {item.location ?? "No location"} · approved {item.approved_qty}
-                  </p>
-                </div>
-                <input
-                  type="number"
-                  min={0}
-                  max={item.approved_qty ?? 0}
-                  value={issuedQtys[item.component_id] ?? 0}
-                  disabled={notApproved}
-                  onChange={(e) => {
-                    const clamped = Math.min(
-                      Math.max(0, Math.round(Number(e.target.value)) || 0),
-                      item.approved_qty ?? 0,
-                    );
-                    setIssuedQtys((prev) => ({ ...prev, [item.component_id]: clamped }));
-                  }}
-                  className="h-9 w-16 shrink-0 rounded-md border border-slate-300 text-center"
-                />
+            <div key={item.component_id} className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-foreground">{item.name}</p>
+                <p className="text-xs text-muted">
+                  {item.location ?? "No location"} · approved {item.approved_qty}
+                </p>
               </div>
+              <input
+                type="number"
+                min={0}
+                max={item.approved_qty ?? 0}
+                value={issuedQtys[item.component_id] ?? 0}
+                disabled={notApproved}
+                onChange={(e) => {
+                  const clamped = Math.min(
+                    Math.max(0, Math.round(Number(e.target.value)) || 0),
+                    item.approved_qty ?? 0,
+                  );
+                  setIssuedQtys((prev) => ({ ...prev, [item.component_id]: clamped }));
+                }}
+                className="h-9 w-16 shrink-0 rounded-md border border-field-border bg-field text-center text-sm text-field-foreground"
+              />
             </div>
           ))}
         </div>
       </div>
 
       {anyReduced && (
-        <p className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
+        <p className="text-sm text-warning">
           Issuing less than approved releases the remaining reserved stock back to availability.
         </p>
       )}
 
       {notApproved && (
-        <p className="mt-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
+        <p className="text-sm text-warning">
           This request is no longer approved (status: {detail.status}).
         </p>
       )}
 
-      <div className="mt-6 flex gap-2">
-        <Button variant="secondary" className="flex-1" loading={pickupLoading} onClick={openPickupCard}>
+      <div className="flex flex-wrap gap-3">
+        <Button variant="secondary" loading={pickupLoading} onClick={openPickupCard}>
           View pickup card
         </Button>
         <Button
-          className="flex-1"
           disabled={notApproved || approvedLines.length === 0 || issueMutation.isPending || !isOnline}
           onClick={() => setConfirmOpen(true)}
         >
@@ -179,20 +176,20 @@ export function IssueDetailPanel({ requestId, onClose, onIssued }: IssueDetailPa
       </div>
 
       <Modal open={confirmOpen} onClose={() => setConfirmOpen(false)} titleId="confirm-issue-title">
-        <h2 id="confirm-issue-title" className="text-lg font-semibold text-slate-900">
+        <h2 id="confirm-issue-title" className="text-lg font-semibold text-foreground">
           Confirm handover
         </h2>
-        <ul className="mt-3 space-y-1">
+        <ul className="flex flex-col gap-1.5">
           {approvedLines.map((item) => (
-            <li key={item.component_id} className="flex justify-between text-sm text-slate-700">
-              <span>{item.name}</span>
-              <span className="font-medium">
+            <li key={item.component_id} className="flex items-center justify-between text-sm">
+              <span className="text-foreground">{item.name}</span>
+              <span className="text-muted">
                 {issuedQtys[item.component_id] ?? 0} / {item.approved_qty}
               </span>
             </li>
           ))}
         </ul>
-        <div className="mt-4 flex justify-end gap-2">
+        <div className="flex justify-end gap-2">
           <Button variant="secondary" onClick={() => setConfirmOpen(false)} disabled={issueMutation.isPending}>
             Cancel
           </Button>

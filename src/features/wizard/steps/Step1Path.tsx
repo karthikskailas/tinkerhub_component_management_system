@@ -2,37 +2,27 @@ import type { ProjectPath } from "../types";
 
 export function Step1Path({ onChoose }: { onChoose: (path: ProjectPath) => void }) {
   return (
-    <div>
-      <h1 className="mb-1 text-xl font-semibold text-slate-900">
+    <div className="flex flex-col gap-4">
+      <h1 className="text-xl font-semibold text-foreground">
         Is your project added on the TinkerHub app?
       </h1>
-      <p className="mb-6 text-sm text-slate-500">
-        This helps us link your request to the right team.
-      </p>
+      <p className="text-sm text-muted">This helps us link your request to the right team.</p>
       <div className="flex flex-col gap-3">
         <button
           type="button"
           onClick={() => onChoose("registered")}
-          className="rounded-xl border-2 border-slate-200 p-5 text-left transition-colors hover:border-indigo-400 hover:bg-indigo-50"
+          className="flex flex-col gap-1 rounded-xl bg-surface p-4 text-left shadow-surface transition-colors hover:bg-surface-hover"
         >
-          <span className="block text-base font-semibold text-slate-900">
-            Yes, it's added
-          </span>
-          <span className="mt-1 block text-sm text-slate-500">
-            I'll look it up using my phone number.
-          </span>
+          <span className="text-sm font-semibold text-foreground">Yes, it's added</span>
+          <span className="text-sm text-muted">I'll look it up using my phone number.</span>
         </button>
         <button
           type="button"
           onClick={() => onChoose("new")}
-          className="rounded-xl border-2 border-slate-200 p-5 text-left transition-colors hover:border-indigo-400 hover:bg-indigo-50"
+          className="flex flex-col gap-1 rounded-xl bg-surface p-4 text-left shadow-surface transition-colors hover:bg-surface-hover"
         >
-          <span className="block text-base font-semibold text-slate-900">
-            No, I haven't added it
-          </span>
-          <span className="mt-1 block text-sm text-slate-500">
-            I'll show you how, then add my details.
-          </span>
+          <span className="text-sm font-semibold text-foreground">No, I haven't added it</span>
+          <span className="text-sm text-muted">I'll show you how, then add my details.</span>
         </button>
       </div>
     </div>

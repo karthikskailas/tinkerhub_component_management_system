@@ -1,3 +1,4 @@
+import { Input as HeroInput, TextArea as HeroTextArea } from "@heroui/react";
 import { forwardRef } from "react";
 import type { InputHTMLAttributes, TextareaHTMLAttributes } from "react";
 
@@ -10,11 +11,11 @@ interface FieldWrapperProps {
 
 function FieldWrapper({ label, error, hint, children }: FieldWrapperProps) {
   return (
-    <label className="block">
-      <span className="mb-1 block text-sm font-medium text-slate-700">{label}</span>
+    <label className="flex flex-col gap-1.5">
+      <span className="text-sm font-medium text-foreground">{label}</span>
       {children}
-      {hint && !error && <span className="mt-1 block text-xs text-slate-500">{hint}</span>}
-      {error && <span className="mt-1 block text-xs text-red-600">{error}</span>}
+      {hint && !error && <span className="text-xs text-muted">{hint}</span>}
+      {error && <span className="text-xs text-danger">{error}</span>}
     </label>
   );
 }
@@ -26,15 +27,9 @@ type InputProps = InputHTMLAttributes<HTMLInputElement> & {
 };
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, hint, className = "", ...rest }, ref) => (
+  ({ label, error, hint, ...rest }, ref) => (
     <FieldWrapper label={label} error={error} hint={hint}>
-      <input
-        ref={ref}
-        className={`min-h-11 w-full rounded-lg border px-3 py-2.5 text-base outline-none focus:ring-2 focus:ring-indigo-500 ${
-          error ? "border-red-400" : "border-slate-300"
-        } ${className}`}
-        {...rest}
-      />
+      <HeroInput ref={ref} fullWidth {...rest} />
     </FieldWrapper>
   ),
 );
@@ -47,15 +42,9 @@ type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
 };
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ label, error, hint, className = "", ...rest }, ref) => (
+  ({ label, error, hint, ...rest }, ref) => (
     <FieldWrapper label={label} error={error} hint={hint}>
-      <textarea
-        ref={ref}
-        className={`w-full rounded-lg border px-3 py-2.5 text-base outline-none focus:ring-2 focus:ring-indigo-500 ${
-          error ? "border-red-400" : "border-slate-300"
-        } ${className}`}
-        {...rest}
-      />
+      <HeroTextArea ref={ref} fullWidth {...rest} />
     </FieldWrapper>
   ),
 );

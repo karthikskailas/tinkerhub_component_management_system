@@ -45,7 +45,7 @@ export function RequireStaff({ roles, children }: RequireStaffProps) {
 
   if (!ready || isLoading) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-6">
+      <div className="p-4 sm:p-6">
         <SkeletonLines count={4} />
       </div>
     );
@@ -62,12 +62,10 @@ export function RequireStaff({ roles, children }: RequireStaffProps) {
 
 function NotAuthorized({ homeHref }: { homeHref: string }) {
   return (
-    <div className="mx-auto max-w-lg px-4 py-16 text-center">
-      <h1 className="mb-2 text-xl font-semibold text-slate-900">Not authorized</h1>
-      <p className="mb-4 text-sm text-slate-500">
-        Your role doesn't have access to this page.
-      </p>
-      <Link to={homeHref} className="text-sm font-medium text-indigo-600 underline">
+    <div className="flex flex-col items-start gap-2 rounded-2xl bg-surface p-6 text-surface-foreground shadow-surface">
+      <h1 className="text-lg font-semibold">Not authorized</h1>
+      <p className="text-sm text-muted">Your role doesn't have access to this page.</p>
+      <Link to={homeHref} className="text-sm font-medium text-accent hover:underline">
         Go to your home page
       </Link>
     </div>

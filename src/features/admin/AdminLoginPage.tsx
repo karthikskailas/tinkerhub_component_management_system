@@ -133,63 +133,74 @@ export function AdminLoginPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-4 py-10">
-      <h1 className="mb-6 text-xl font-semibold text-slate-900">Staff sign in</h1>
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <Input
-          label="Email"
-          type="email"
-          autoComplete="username"
-          error={errors.email?.message}
-          disabled={locked}
-          {...register("email")}
-        />
-
-        <div className="relative">
-          <Input
-            label="Password"
-            type={showPassword ? "text" : "password"}
-            autoComplete="current-password"
-            error={errors.password?.message}
-            disabled={locked}
-            {...register("password")}
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword((v) => !v)}
-            className="absolute right-0 top-0 min-h-11 px-3 text-xs font-medium text-indigo-600"
-          >
-            {showPassword ? "Hide" : "Show"}
-          </button>
+    <div className="flex min-h-dvh items-center justify-center bg-background px-4 py-10">
+      <div className="w-full max-w-sm rounded-2xl bg-surface p-6 text-surface-foreground shadow-surface sm:p-8">
+        <div className="mb-6 flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent-soft text-accent">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-5 w-5">
+              <rect x="3" y="3" width="7" height="7" rx="1.5" />
+              <rect x="14" y="3" width="7" height="7" rx="1.5" />
+              <rect x="3" y="14" width="7" height="7" rx="1.5" />
+              <rect x="14" y="14" width="7" height="7" rx="1.5" />
+            </svg>
+          </div>
+          <h1 className="text-lg font-semibold">Staff sign in</h1>
         </div>
 
-        {TURNSTILE_SITE_KEY && (
-          <Turnstile
-            ref={turnstileRef}
-            siteKey={TURNSTILE_SITE_KEY}
-            onSuccess={setCaptchaToken}
-            onExpire={() => setCaptchaToken(null)}
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+          <Input
+            label="Email"
+            type="email"
+            autoComplete="username"
+            error={errors.email?.message}
+            disabled={locked}
+            {...register("email")}
           />
-        )}
 
-        {submitError && <p className="text-sm text-red-600">{submitError}</p>}
+          <div className="flex flex-col gap-1.5">
+            <Input
+              label="Password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              error={errors.password?.message}
+              disabled={locked}
+              {...register("password")}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="self-start text-xs font-medium text-accent hover:underline"
+            >
+              {showPassword ? "Hide password" : "Show password"}
+            </button>
+          </div>
 
-        {locked && (
-          <p className="text-sm text-amber-600">
-            Too many attempts. Try again in {remainingSeconds}s.
-          </p>
-        )}
+          {TURNSTILE_SITE_KEY && (
+            <Turnstile
+              ref={turnstileRef}
+              siteKey={TURNSTILE_SITE_KEY}
+              onSuccess={setCaptchaToken}
+              onExpire={() => setCaptchaToken(null)}
+            />
+          )}
 
-        <Button
-          type="submit"
-          className="w-full"
-          loading={submitting}
-          disabled={locked || (!!TURNSTILE_SITE_KEY && !captchaToken)}
-        >
-          Sign in
-        </Button>
-      </form>
+          {submitError && <p className="text-sm text-danger">{submitError}</p>}
+
+          {locked && (
+            <p className="text-sm text-warning">
+              Too many attempts. Try again in {remainingSeconds}s.
+            </p>
+          )}
+
+          <Button
+            type="submit"
+            loading={submitting}
+            disabled={locked || (!!TURNSTILE_SITE_KEY && !captchaToken)}
+          >
+            Sign in
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }

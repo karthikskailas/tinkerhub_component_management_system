@@ -1,12 +1,14 @@
-export function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`animate-pulse rounded-md bg-slate-200 ${className}`} />;
+import { Skeleton as HeroSkeleton } from "@heroui/react";
+
+export function Skeleton() {
+  return <HeroSkeleton className="h-4 w-full rounded-md" />;
 }
 
 export function SkeletonLines({ count = 3 }: { count?: number }) {
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col gap-2">
       {Array.from({ length: count }, (_, i) => (
-        <Skeleton key={i} className="h-4 w-full" />
+        <Skeleton key={i} />
       ))}
     </div>
   );

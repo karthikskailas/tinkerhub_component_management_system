@@ -29,15 +29,15 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     if (!this.state.error) return this.props.children;
 
     return (
-      <div className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center px-4 text-center">
-        <h1 className="mb-2 text-xl font-semibold text-slate-900">Something went wrong</h1>
-        <p className="mb-4 text-sm text-slate-500">
+      <div className="mx-auto flex min-h-dvh max-w-lg flex-col items-center justify-center gap-3 px-4 text-center">
+        <h1 className="text-xl font-semibold text-foreground">Something went wrong</h1>
+        <p className="text-sm text-muted">
           {this.props.label} hit an unexpected error. Reloading usually fixes it.
         </p>
         <button
           type="button"
           onClick={() => window.location.reload()}
-          className="min-h-11 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white"
+          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground"
         >
           Reload
         </button>

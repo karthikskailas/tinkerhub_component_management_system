@@ -86,13 +86,10 @@ export function Wizard() {
 
   if (!isAnonymous) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-6">
-        <div className="rounded-lg bg-indigo-50 p-4 text-center">
-          <p className="text-sm font-medium text-indigo-900">You are signed in as staff.</p>
-          <Link
-            to="/admin"
-            className="mt-2 inline-block text-sm font-medium text-indigo-700 underline"
-          >
+      <div className="flex min-h-dvh items-center justify-center bg-white px-4 text-center">
+        <div className="flex flex-col items-center gap-3">
+          <p className="text-sm text-muted">You are signed in as staff.</p>
+          <Link to="/admin" className="text-sm font-medium text-accent hover:underline">
             Go to the staff dashboard
           </Link>
         </div>
@@ -109,7 +106,8 @@ export function Wizard() {
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-6">
+    <div className="min-h-dvh bg-white sm:bg-background sm:py-6">
+      <div className="mx-auto flex w-full max-w-lg flex-col gap-5 p-4 sm:rounded-3xl sm:bg-surface sm:p-6 sm:shadow-surface">
       {draft.step === 1 && <OpenRequestBanner />}
 
       <Stepper step={draft.step} total={4} labels={STEP_LABELS} />
@@ -157,6 +155,7 @@ export function Wizard() {
           />
         )}
       </Suspense>
+      </div>
     </div>
   );
 }

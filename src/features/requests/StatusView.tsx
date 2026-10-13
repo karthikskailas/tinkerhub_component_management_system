@@ -25,36 +25,57 @@ interface StatusViewProps {
   resubmitting?: boolean;
 }
 
-const STATUS_COPY: Record<RequestStatus, { title: string; body: string }> = {
+const STATUS_COPY: Record<RequestStatus, { title: string; body: string; tone: "good" | "bad" }> = {
   pending: {
-    title: "Awaiting approval",
+    title: "Request submitted",
     body: "An admin will review your request shortly.",
+    tone: "good",
   },
   approved: {
     title: "Approved",
     body: "Please wait for the inventory manager to give you the components.",
+    tone: "good",
   },
   issued: {
     title: "Components issued",
     body: "Please return them to the inventory manager when finished.",
+    tone: "good",
   },
   returned: {
     title: "Completed",
     body: "Thank you.",
+    tone: "good",
   },
   rejected: {
     title: "Rejected: need more review",
     body: "",
+    tone: "bad",
   },
   cancelled: {
     title: "Request cancelled",
     body: "This request was cancelled.",
+    tone: "bad",
   },
   expired: {
     title: "Request expired",
     body: "The approval window for this request expired before it was issued.",
+    tone: "bad",
   },
 };
+
+function StatusIcon({ tone }: { tone: "good" | "bad" }) {
+  return (
+    <div
+      className={`flex h-16 w-16 items-center justify-center rounded-full ${
+        tone === "good" ? "bg-success-soft text-success" : "bg-danger-soft text-danger"
+      }`}
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="h-8 w-8">
+        {tone === "good" ? <path d="M5 13l4 4L19 7" /> : <path d="M6 6l12 12M18 6L6 18" />}
+      </svg>
+    </div>
+  );
+}
 
 export function StatusView({
   status,
@@ -73,6 +94,16 @@ export function StatusView({
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const copy = STATUS_COPY[status];
 
+  async function copyCode() {
+    if (!code) return;
+    try {
+      await navigator.clipboard.writeText(code);
+      toast.success("Code copied.");
+    } catch {
+      toast.error("Couldn't copy the code.");
+    }
+  }
+
   async function copyLink() {
     if (!publicToken) return;
     const url = `${window.location.origin}/r/${publicToken}`;
@@ -85,82 +116,103 @@ export function StatusView({
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-6">
-      {code && (
-        <p className="mb-2 font-mono text-xs tracking-wide text-slate-500">#{code}</p>
-      )}
+    <div className="min-h-dvh bg-white sm:bg-background sm:px-4 sm:py-6">
+      <div className="mx-auto flex w-full max-w-lg flex-col items-center gap-4 p-6 text-center sm:rounded-3xl sm:bg-surface sm:p-8 sm:shadow-surface">
+        <StatusIcon tone={copy.tone} />
 
-      <h1 className="mb-1 text-xl font-semibold text-slate-900">{copy.title}</h1>
-      {copy.body && <p className="mb-4 text-sm text-slate-600">{copy.body}</p>}
+        <div className="flex flex-col gap-1">
+          <h1 className="text-xl font-semibold text-foreground">{copy.title}</h1>
+          {copy.body && <p className="text-sm text-muted">{copy.body}</p>}
+        </div>
 
-      {status === "rejected" && rejectReason && (
-        <p className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{rejectReason}</p>
-      )}
+        {status === "rejected" && rejectReason && (
+          <p className="w-full rounded-xl bg-danger-soft p-3 text-sm text-danger-soft-foreground">
+            {rejectReason}
+          </p>
+        )}
 
-      {projectName && (
-        <p className="mb-4 text-sm text-slate-500">
-          Project: <span className="font-medium text-slate-700">{projectName}</span>
-        </p>
-      )}
+        {projectName && (
+          <p className="text-sm text-muted">
+            Project: <span className="font-medium text-foreground">{projectName}</span>
+          </p>
+        )}
 
-      <div className="mb-6 rounded-lg border border-slate-200 p-3">
-        <span className="mb-2 block text-sm font-semibold text-slate-900">Components</span>
-        <ul className="space-y-1">
-          {items.map((item) => (
-            <li key={item.name} className="flex justify-between text-sm text-slate-700">
-              <span>{item.name}</span>
-              <span className="font-medium">
-                {item.approvedQty !== null && item.approvedQty !== item.qty ? (
-                  <>
-                    <span className="text-slate-400 line-through">{item.qty}</span>{" "}
-                    {item.approvedQty}
-                  </>
-                ) : (
-                  item.qty
-                )}
-              </span>
-            </li>
-          ))}
-        </ul>
+        {code && (
+          <div className="flex w-full items-center justify-between rounded-xl bg-background p-3 text-left">
+            <div>
+              <p className="text-xs text-muted">Request code</p>
+              <p className="font-mono text-sm font-semibold text-foreground">{code}</p>
+            </div>
+            <button
+              type="button"
+              onClick={copyCode}
+              className="rounded-full bg-surface px-3 py-1.5 text-xs font-medium text-accent shadow-surface"
+            >
+              Copy
+            </button>
+          </div>
+        )}
+
+        <div className="w-full rounded-xl bg-background p-4 text-left">
+          <span className="text-sm font-semibold text-foreground">Components</span>
+          <ul className="mt-2 flex flex-col gap-1.5">
+            {items.map((item) => (
+              <li key={item.name} className="flex items-center justify-between text-sm">
+                <span className="text-foreground">{item.name}</span>
+                <span className="text-muted">
+                  {item.approvedQty !== null && item.approvedQty !== item.qty ? (
+                    <>
+                      <span className="line-through">{item.qty}</span> {item.approvedQty}
+                    </>
+                  ) : (
+                    item.qty
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="flex w-full flex-col gap-2">
+          {isOwner && status === "rejected" && onResubmit && (
+            <Button onClick={onResubmit} loading={resubmitting} fullWidth className="rounded-full">
+              Resubmit
+            </Button>
+          )}
+
+          {isOwner && (status === "cancelled" || status === "expired") && (
+            <Button onClick={() => navigate("/")} fullWidth className="rounded-full">
+              Start a new request
+            </Button>
+          )}
+
+          {publicToken && (
+            <Button variant="secondary" onClick={copyLink} fullWidth className="rounded-full">
+              Copy status link
+            </Button>
+          )}
+
+          {isOwner && status === "pending" && onCancel && (
+            <Button variant="danger" onClick={() => setConfirmingCancel(true)} fullWidth className="rounded-full">
+              Cancel request
+            </Button>
+          )}
+        </div>
+
+        <ConfirmDialog
+          open={confirmingCancel}
+          title="Cancel this request?"
+          description="This can't be undone. You'll need to submit a new request if you change your mind."
+          confirmLabel="Cancel request"
+          danger
+          onCancel={() => setConfirmingCancel(false)}
+          onConfirm={async () => {
+            setConfirmingCancel(false);
+            await onCancel?.();
+          }}
+        />
+        {cancelling && <p className="text-sm text-muted">Cancelling...</p>}
       </div>
-
-      <div className="flex flex-col gap-2">
-        {publicToken && (
-          <Button variant="secondary" onClick={copyLink}>
-            Copy status link
-          </Button>
-        )}
-
-        {isOwner && status === "pending" && onCancel && (
-          <Button variant="danger" onClick={() => setConfirmingCancel(true)}>
-            Cancel request
-          </Button>
-        )}
-
-        {isOwner && status === "rejected" && onResubmit && (
-          <Button onClick={onResubmit} loading={resubmitting}>
-            Resubmit
-          </Button>
-        )}
-
-        {isOwner && (status === "cancelled" || status === "expired") && (
-          <Button onClick={() => navigate("/")}>Start a new request</Button>
-        )}
-      </div>
-
-      <ConfirmDialog
-        open={confirmingCancel}
-        title="Cancel this request?"
-        description="This can't be undone. You'll need to submit a new request if you change your mind."
-        confirmLabel="Cancel request"
-        danger
-        onCancel={() => setConfirmingCancel(false)}
-        onConfirm={async () => {
-          setConfirmingCancel(false);
-          await onCancel?.();
-        }}
-      />
-      {cancelling && <p className="mt-2 text-center text-sm text-slate-500">Cancelling...</p>}
     </div>
   );
 }

@@ -22,23 +22,19 @@ function IssueRowImpl({ row, onOpen }: IssueRowProps) {
     <button
       type="button"
       onClick={() => onOpen(row.id)}
-      className="block min-h-11 w-full rounded-lg border border-slate-200 bg-white p-3 text-left"
+      className="flex w-full flex-col gap-1 rounded-xl bg-surface p-4 text-left shadow-surface"
     >
-      <div className="mb-1 flex items-center justify-between gap-2">
-        <span className="font-mono text-xs font-semibold text-indigo-600">{row.code}</span>
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-mono text-sm font-semibold text-accent">{row.code}</span>
         {expiry && (
-          <span
-            className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-              expiry.urgent ? "bg-red-100 text-red-700" : "bg-slate-100 text-slate-600"
-            }`}
-          >
+          <span className={`text-xs font-medium ${expiry.urgent ? "text-danger" : "text-muted"}`}>
             {expiry.label}
           </span>
         )}
       </div>
-      <p className="text-sm font-medium text-slate-900">{row.requester_name}</p>
-      <p className="text-sm text-slate-500">{row.phone}</p>
-      <p className="mt-1 text-sm text-slate-700">
+      <p className="text-sm font-medium text-foreground">{row.requester_name}</p>
+      <p className="text-sm text-muted">{row.phone}</p>
+      <p className="text-sm text-muted">
         {row.project_name ?? "Untitled project"} · {row.item_count} item
         {row.item_count === 1 ? "" : "s"}
       </p>

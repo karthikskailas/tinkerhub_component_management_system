@@ -50,17 +50,15 @@ export function HistoryFilters({
   }
 
   return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap gap-1.5">
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-wrap gap-2">
         {HISTORY_STATUSES.map((status) => (
           <button
             key={status}
             type="button"
             onClick={() => toggleStatus(status)}
-            className={`min-h-11 rounded-full border px-3 text-sm font-medium ${
-              statuses.includes(status)
-                ? "border-indigo-500 bg-indigo-50 text-indigo-700"
-                : "border-slate-300 text-slate-600"
+            className={`rounded-full px-3 py-1.5 text-sm font-medium ${
+              statuses.includes(status) ? "bg-accent text-accent-foreground" : "bg-surface text-muted shadow-surface"
             }`}
           >
             {STATUS_LABELS[status]}
@@ -68,16 +66,14 @@ export function HistoryFilters({
         ))}
       </div>
 
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div className="flex flex-wrap gap-2">
         {(["all", "today", "7d", "30d", "custom"] as DatePreset[]).map((preset) => (
           <button
             key={preset}
             type="button"
             onClick={() => onDatePresetChange(preset)}
-            className={`min-h-11 rounded-full border px-3 text-sm font-medium ${
-              datePreset === preset
-                ? "border-indigo-500 bg-indigo-50 text-indigo-700"
-                : "border-slate-300 text-slate-600"
+            className={`rounded-full border px-3 py-1.5 text-sm font-medium ${
+              datePreset === preset ? "border-accent text-accent" : "border-border text-muted"
             }`}
           >
             {preset === "all"
@@ -94,19 +90,19 @@ export function HistoryFilters({
       </div>
 
       {datePreset === "custom" && (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2">
           <input
             type="date"
             value={customFrom}
             onChange={(e) => onCustomFromChange(e.target.value)}
-            className="min-h-11 rounded-lg border border-slate-300 px-2 text-sm"
+            className="min-h-11 rounded-lg border border-field-border bg-field px-2 text-sm text-field-foreground"
           />
-          <span className="text-sm text-slate-400">to</span>
+          <span className="text-sm text-muted">to</span>
           <input
             type="date"
             value={customTo}
             onChange={(e) => onCustomToChange(e.target.value)}
-            className="min-h-11 rounded-lg border border-slate-300 px-2 text-sm"
+            className="min-h-11 rounded-lg border border-field-border bg-field px-2 text-sm text-field-foreground"
           />
         </div>
       )}

@@ -56,7 +56,7 @@ const RequireStaff = lazy(() =>
 
 function PageFallback() {
   return (
-    <div className="mx-auto max-w-lg px-4 py-6">
+    <div>
       <SkeletonLines count={5} />
     </div>
   );

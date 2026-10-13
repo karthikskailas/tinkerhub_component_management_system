@@ -95,10 +95,10 @@ export function Step2Details({ draft, userId, onBack, onNext }: Step2Props) {
   }
 
   return (
-    <div>
-      <h1 className="mb-4 text-xl font-semibold text-slate-900">Your details</h1>
+    <div className="flex flex-col gap-5">
+      <h1 className="text-xl font-semibold text-foreground">Your details</h1>
 
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         <Input
           label="Your name"
           error={detailsForm.formState.errors.requesterName?.message}
@@ -114,42 +114,41 @@ export function Step2Details({ draft, userId, onBack, onNext }: Step2Props) {
         />
 
         {showRegisteredPath ? (
-          <div>
+          <div className="flex flex-col gap-2">
             {!phoneReady && (
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-muted">
                 Enter your 10-digit phone number to look up your project.
               </p>
             )}
-            {phoneReady && projectsQuery.isLoading && (
-              <p className="text-sm text-slate-500">Searching...</p>
-            )}
+            {phoneReady && projectsQuery.isLoading && <p className="text-sm text-muted">Searching...</p>}
             {phoneReady && projectsQuery.isError && (
-              <p className="text-sm text-red-600">Couldn't search right now. Try again.</p>
+              <p className="text-sm text-danger">Couldn't search right now. Try again.</p>
             )}
             {phoneReady && projectsQuery.data && projectsQuery.data.length === 0 && (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-                <p className="text-sm text-amber-800">No project found for this number.</p>
+              <div className="flex flex-col gap-2">
+                <p className="text-sm text-muted">No project found for this number.</p>
                 <button
                   type="button"
                   onClick={() => setSwitchedToNew(true)}
-                  className="mt-2 min-h-11 text-sm font-medium text-indigo-600"
+                  className="self-start text-sm font-medium text-accent hover:underline"
                 >
                   Add a new project instead
                 </button>
               </div>
             )}
             {phoneReady && projectsQuery.data && projectsQuery.data.length > 0 && (
-              <div className="space-y-2">
-                <span className="block text-sm font-medium text-slate-700">Select your project</span>
+              <div className="flex flex-col gap-2">
+                <span className="text-sm font-medium text-foreground">Select your project</span>
                 {projectsQuery.data.map((p) => (
                   <button
                     key={p.id}
                     type="button"
                     onClick={() => setSelectedProjectId(p.id)}
-                    className={`block min-h-11 w-full rounded-lg border px-3 py-2.5 text-left text-sm ${
-                      selectedProjectId === p.id
-                        ? "border-indigo-500 bg-indigo-50"
-                        : "border-slate-300"
+                    data-selected={p.id === selectedProjectId}
+                    className={`rounded-xl px-4 py-3 text-left text-sm font-medium shadow-surface ${
+                      p.id === selectedProjectId
+                        ? "bg-accent text-accent-foreground"
+                        : "bg-surface text-foreground"
                     }`}
                   >
                     {p.name}
@@ -159,7 +158,7 @@ export function Step2Details({ draft, userId, onBack, onNext }: Step2Props) {
             )}
           </div>
         ) : (
-          <div className="space-y-4 rounded-lg border border-slate-200 p-3">
+          <div className="flex flex-col gap-4">
             <Input
               label="Project name"
               error={newProjectForm.formState.errors.name?.message}
@@ -184,16 +183,16 @@ export function Step2Details({ draft, userId, onBack, onNext }: Step2Props) {
           onChange={setScreenshotPath}
           label="Screenshot of your project page on the TinkerHub app"
           labelExtra={
-            <ExampleImageTrigger className="text-xs font-medium text-indigo-600">
-              See example
+            <ExampleImageTrigger>
+              <span className="text-sm font-medium text-accent hover:underline">See example</span>
             </ExampleImageTrigger>
           }
           helperText="We use this only to verify your project. It is deleted after your request is reviewed."
         />
       </div>
 
-      <div className="mt-6 flex justify-between">
-        <Button variant="secondary" onClick={onBack}>
+      <div className="flex gap-3">
+        <Button variant="secondary" onClick={onBack} className="shrink-0 rounded-full">
           Back
         </Button>
         <Button
@@ -205,8 +204,9 @@ export function Step2Details({ draft, userId, onBack, onNext }: Step2Props) {
                 )
           }
           disabled={showRegisteredPath && !selectedProjectId}
+          className="flex-1 rounded-full"
         >
-          Next
+          Next →
         </Button>
       </div>
     </div>

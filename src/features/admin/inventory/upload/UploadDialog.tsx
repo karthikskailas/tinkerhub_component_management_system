@@ -63,14 +63,14 @@ export function UploadDialog({ open, onClose, onCommitted }: UploadDialogProps) 
   const invalidRows = flow.rows.filter((r) => r.diff === "invalid");
 
   return (
-    <Modal open={open} onClose={handleClose} widthClassName="max-w-3xl" titleId="upload-dialog-title">
-      <h2 id="upload-dialog-title" className="text-lg font-semibold text-slate-900">
+    <Modal open={open} onClose={handleClose} titleId="upload-dialog-title">
+      <h2 id="upload-dialog-title" className="text-lg font-semibold text-foreground">
         Upload inventory sheet
       </h2>
 
       {flow.step === "choose" && (
-        <div className="mt-4">
-          <p className="mb-3 text-sm text-slate-600">
+        <div className="flex flex-col gap-3">
+          <p className="text-sm text-muted">
             Columns: <code>name</code> and <code>count</code> are required; <code>location</code>,{" "}
             <code>description</code>, <code>returnable</code> are optional.
           </p>
@@ -83,20 +83,20 @@ export function UploadDialog({ open, onClose, onCommitted }: UploadDialogProps) 
               ref={fileInputRef}
               type="file"
               accept=".xlsx,.csv"
-              className="hidden"
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) void flow.chooseFile(file);
               }}
+              className="hidden"
             />
           </div>
-          {flow.parseError && <p className="mt-3 text-sm text-red-600">{flow.parseError}</p>}
+          {flow.parseError && <p className="text-sm text-danger">{flow.parseError}</p>}
         </div>
       )}
 
       {flow.step === "previewing" && (
-        <div className="mt-6">
-          <p className="mb-2 text-sm text-slate-600">
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-muted">
             Checking rows against current stock... ({flow.previewProgress.done}/
             {flow.previewProgress.total} batches)
           </p>
@@ -105,28 +105,28 @@ export function UploadDialog({ open, onClose, onCommitted }: UploadDialogProps) 
       )}
 
       {(flow.step === "preview" || flow.step === "committing") && (
-        <div className="mt-4">
+        <div className="flex flex-col gap-4">
           {flow.ignoredColumns.length > 0 && (
-            <p className="mb-3 text-xs text-slate-500">
+            <p className="text-sm text-warning">
               Ignored columns: {flow.ignoredColumns.join(", ")}
             </p>
           )}
 
-          <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <SummaryCard label="New" value={counts.new} />
             <SummaryCard label="Changed" value={counts.changed} />
             <SummaryCard label="Unchanged" value={counts.unchanged} muted />
             <SummaryCard label="Invalid" value={counts.invalid} warn={counts.invalid > 0} />
           </div>
 
-          <div className="mb-2 flex gap-1 rounded-lg bg-slate-100 p-1">
+          <div className="flex flex-wrap gap-2">
             {TABS.map((tab) => (
               <button
                 key={tab.key}
                 type="button"
                 onClick={() => setActiveTab(tab.key)}
-                className={`min-h-11 flex-1 rounded-md text-sm font-medium ${
-                  activeTab === tab.key ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"
+                className={`rounded-full px-3 py-1.5 text-sm font-medium ${
+                  activeTab === tab.key ? "bg-accent text-accent-foreground" : "bg-background text-muted"
                 }`}
               >
                 {tab.label} ({counts[tab.key]})
@@ -140,13 +140,13 @@ export function UploadDialog({ open, onClose, onCommitted }: UploadDialogProps) 
             <button
               type="button"
               onClick={() => downloadInvalidRows(invalidRows)}
-              className="mt-2 min-h-11 text-sm font-medium text-indigo-600 underline"
+              className="self-start text-sm font-medium text-accent hover:underline"
             >
               Download invalid rows
             </button>
           )}
 
-          <p className="mt-3 text-xs text-slate-500">
+          <p className="text-xs text-muted">
             Components missing from the sheet are never deleted. Invalid and unchanged rows are
             skipped.
           </p>
@@ -156,12 +156,11 @@ export function UploadDialog({ open, onClose, onCommitted }: UploadDialogProps) 
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             disabled={flow.isCommitting}
-            className="mt-3"
           />
 
           {flow.isCommitting && (
-            <div className="mt-3">
-              <p className="mb-2 text-sm text-slate-600">
+            <div className="flex flex-col gap-2">
+              <p className="text-sm text-muted">
                 Applying changes... ({flow.commitProgress.done}/{flow.commitProgress.total} batches)
               </p>
               <ProgressBar progress={flow.commitProgress} />
@@ -169,17 +168,17 @@ export function UploadDialog({ open, onClose, onCommitted }: UploadDialogProps) 
           )}
 
           {flow.commitError && (
-            <div className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">
-              <p>
+            <div className="flex flex-col gap-2 rounded-xl bg-danger-soft p-3">
+              <p className="text-sm text-danger-soft-foreground">
                 Batch {flow.commitError.chunkIndex + 1} failed: {flow.commitError.message}
               </p>
-              <Button className="mt-2" variant="danger" onClick={() => void flow.retryCommit()}>
+              <Button variant="danger" onClick={() => void flow.retryCommit()}>
                 Retry from this batch
               </Button>
             </div>
           )}
 
-          <div className="mt-4 flex justify-end gap-2">
+          <div className="flex justify-end gap-2">
             <Button variant="secondary" onClick={handleClose} disabled={flow.isCommitting}>
               Cancel
             </Button>
@@ -202,15 +201,15 @@ export function UploadDialog({ open, onClose, onCommitted }: UploadDialogProps) 
       )}
 
       {flow.step === "done" && flow.commitResult && (
-        <div className="mt-4">
-          <p className="mb-3 text-sm text-slate-700">Upload complete.</p>
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-foreground">Upload complete.</p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <SummaryCard label="Inserted" value={flow.commitResult.inserted} />
             <SummaryCard label="Updated" value={flow.commitResult.updated} />
             <SummaryCard label="Unchanged" value={flow.commitResult.unchanged} muted />
             <SummaryCard label="Invalid" value={flow.commitResult.invalid} warn={flow.commitResult.invalid > 0} />
           </div>
-          <div className="mt-4 flex justify-end">
+          <div className="flex justify-end">
             <Button
               onClick={() => {
                 onCommitted();

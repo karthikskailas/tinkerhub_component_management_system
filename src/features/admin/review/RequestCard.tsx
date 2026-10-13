@@ -12,24 +12,24 @@ function RequestCardImpl({ row, onOpen, onCancelApproval }: RequestCardProps) {
   const code = row.id.slice(0, 8).toUpperCase();
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3">
+    <div className="rounded-xl bg-surface shadow-surface">
       <button
         type="button"
         onClick={() => onOpen(row.id)}
-        className="block min-h-11 w-full text-left"
+        className="flex w-full flex-col gap-1 p-4 text-left"
       >
-        <div className="mb-1 flex items-center justify-between gap-2">
-          <span className="font-mono text-xs font-semibold text-indigo-600">{code}</span>
-          <span className="text-xs text-slate-400">{relativeTime(row.created_at)}</span>
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-mono text-sm font-semibold text-accent">{code}</span>
+          <span className="text-xs text-muted">{relativeTime(row.created_at)}</span>
         </div>
-        <p className="text-sm font-medium text-slate-900">{row.requester_name}</p>
-        <p className="text-sm text-slate-500">{row.phone}</p>
-        <p className="mt-1 text-sm text-slate-700">
+        <p className="text-sm font-medium text-foreground">{row.requester_name}</p>
+        <p className="text-sm text-muted">{row.phone}</p>
+        <p className="text-sm text-muted">
           {row.project_name ?? "Untitled project"} · {row.item_count} item
           {row.item_count === 1 ? "" : "s"}
         </p>
         {row.expires_at && (
-          <p className="mt-1 text-xs text-amber-600">
+          <p className="text-xs text-warning">
             Valid until {new Date(row.expires_at).toLocaleString()}
           </p>
         )}
@@ -39,7 +39,7 @@ function RequestCardImpl({ row, onOpen, onCancelApproval }: RequestCardProps) {
         <button
           type="button"
           onClick={() => onCancelApproval(row)}
-          className="mt-2 min-h-11 w-full rounded-md px-3 text-sm font-medium text-red-600 hover:bg-red-50"
+          className="w-full border-t border-border px-4 py-2 text-left text-sm font-medium text-danger"
         >
           Cancel approval
         </button>

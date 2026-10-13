@@ -75,11 +75,11 @@ export function ReviewPage() {
   });
 
   return (
-    <div className="flex min-h-[calc(100vh-57px)] md:flex-row">
-      <div className="flex-1 px-4 py-4">
+    <div>
+      <div className="flex flex-col gap-4">
         <Header pendingCount={pending.count} connection={pending.connection} />
 
-        <div className="mb-4 flex gap-1 rounded-lg bg-slate-100 p-1">
+        <div className="flex gap-2">
           <TabButton active={tab === "pending"} onClick={() => setTab("pending")}>
             Pending
           </TabButton>
@@ -91,21 +91,21 @@ export function ReviewPage() {
         {list.isLoading && <SkeletonLines count={6} />}
 
         {list.isError && (
-          <p className="text-sm text-red-600">
+          <p className="text-sm text-danger">
             Couldn't load requests.{" "}
-            <button type="button" className="underline" onClick={() => list.refetch()}>
+            <button type="button" onClick={() => list.refetch()} className="font-medium underline">
               Retry
             </button>
           </p>
         )}
 
         {!list.isLoading && !list.isError && list.rows.length === 0 && (
-          <p className="py-10 text-center text-sm text-slate-400">
+          <p className="rounded-xl bg-surface p-6 text-center text-sm text-muted shadow-surface">
             {tab === "pending" ? "Nothing pending right now." : "No approved requests awaiting pickup."}
           </p>
         )}
 
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           {list.rows.map((row) => (
             <RequestCard
               key={row.id}
@@ -119,7 +119,7 @@ export function ReviewPage() {
         </div>
 
         {list.hasNextPage && (
-          <div className="mt-4 text-center">
+          <div className="flex justify-center pt-2">
             <Button
               variant="secondary"
               loading={list.isFetchingNextPage}
@@ -131,7 +131,7 @@ export function ReviewPage() {
         )}
 
         {tab === "approved" && list.rows.length > 0 && (
-          <p className="mt-2 text-center text-xs text-slate-400">
+          <p className="text-center text-xs text-muted">
             Tap a card to reopen its pickup card.
           </p>
         )}
@@ -158,8 +158,10 @@ export function ReviewPage() {
       />
 
       {pickupLoading && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/20">
-          <p className="rounded-lg bg-white px-4 py-2 text-sm text-slate-700 shadow">Loading…</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+          <div className="rounded-xl bg-surface px-4 py-3 text-sm font-medium text-surface-foreground shadow-overlay">
+            Loading…
+          </div>
         </div>
       )}
     </div>
@@ -174,13 +176,14 @@ function Header({
   connection: "live" | "reconnecting";
 }) {
   return (
-    <div className="mb-3 flex items-center justify-between">
-      <h1 className="text-xl font-semibold text-slate-900">
-        Review <span className="text-slate-400">({pendingCount} pending)</span>
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <h1 className="text-xl font-semibold text-foreground">
+        Review <span className="font-normal text-muted">({pendingCount} pending)</span>
       </h1>
-      <div className="flex items-center gap-1.5 text-xs text-slate-500">
+      <div className="flex items-center gap-1.5 text-xs font-medium text-muted">
         <span
-          className={`h-2 w-2 rounded-full ${connection === "live" ? "bg-emerald-500" : "bg-amber-500"}`}
+          data-connection={connection}
+          className={`h-2 w-2 rounded-full ${connection === "live" ? "bg-success" : "bg-warning"}`}
         />
         {connection === "live" ? "Live" : "Reconnecting..."}
       </div>
@@ -200,9 +203,10 @@ function TabButton({
   return (
     <button
       type="button"
+      data-active={active}
       onClick={onClick}
-      className={`min-h-11 flex-1 rounded-md text-sm font-medium transition-colors ${
-        active ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"
+      className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+        active ? "bg-accent text-accent-foreground" : "bg-surface text-muted shadow-surface"
       }`}
     >
       {children}

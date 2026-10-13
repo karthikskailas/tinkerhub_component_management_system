@@ -1,8 +1,6 @@
 import { memo } from "react";
 import type { ComponentRow as ComponentRowData } from "./api";
 
-const GRID_COLS = "sm:grid-cols-[1.5fr_1fr_70px_70px_70px_90px]";
-
 interface ComponentRowProps {
   component: ComponentRowData;
   onAdjust: (component: ComponentRowData) => void;
@@ -13,56 +11,42 @@ function ComponentRowImpl({ component, onAdjust, onHistory }: ComponentRowProps)
   const outOfStock = component.available <= 0;
 
   return (
-    <div
-      className={`grid grid-cols-1 gap-1 border-b border-slate-100 p-3 text-sm sm:items-center sm:gap-2 ${GRID_COLS}`}
-    >
+    <div className="flex flex-col gap-2 border-b border-border p-3 last:border-b-0 sm:grid sm:grid-cols-[1.5fr_1fr_70px_70px_70px_90px] sm:items-center sm:gap-2">
       <div>
-        <p className="font-medium text-slate-900">{component.name}</p>
-        {component.description && (
-          <p className="text-xs text-slate-500 sm:hidden">{component.description}</p>
-        )}
+        <p className="text-sm font-medium text-foreground">{component.name}</p>
+        {component.description && <p className="text-xs text-muted">{component.description}</p>}
         {!component.returnable && (
-          <span className="mt-0.5 inline-block rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+          <span className="mt-0.5 inline-block rounded-full bg-default px-2 py-0.5 text-[11px] font-medium text-muted">
             Non-returnable
           </span>
         )}
       </div>
 
-      <div className="text-slate-600">{component.location ?? "—"}</div>
+      <div className="text-sm text-muted">{component.location ?? "—"}</div>
 
-      <div className="flex justify-between sm:block sm:text-right">
-        <span className="text-xs text-slate-400 sm:hidden">Count</span>
-        {component.count}
+      <div className="flex justify-between text-sm sm:block">
+        <span className="text-xs text-muted sm:hidden">Count</span>
+        <span className="text-foreground">{component.count}</span>
       </div>
 
-      <div className="flex justify-between sm:block sm:text-right">
-        <span className="text-xs text-slate-400 sm:hidden">Reserved</span>
-        <span className="text-slate-400">{component.reserved}</span>
+      <div className="flex justify-between text-sm sm:block">
+        <span className="text-xs text-muted sm:hidden">Reserved</span>
+        <span className="text-foreground">{component.reserved}</span>
       </div>
 
-      <div className="flex items-center justify-between gap-2 sm:block sm:text-right">
-        <span className="text-xs text-slate-400 sm:hidden">Available</span>
-        <span className={outOfStock ? "font-medium text-red-600" : ""}>
+      <div className="flex justify-between text-sm sm:block">
+        <span className="text-xs text-muted sm:hidden">Available</span>
+        <span className={outOfStock ? "font-medium text-danger" : "text-foreground"}>
           {component.available}
-          {outOfStock && (
-            <span className="ml-1 rounded-full bg-red-100 px-1.5 py-0.5 text-xs">Out</span>
-          )}
+          {outOfStock && <span className="ml-1 text-xs">Out</span>}
         </span>
       </div>
 
-      <div className="flex gap-2 sm:justify-end">
-        <button
-          type="button"
-          onClick={() => onAdjust(component)}
-          className="min-h-11 rounded-md px-2 text-xs font-medium text-indigo-600 hover:bg-indigo-50"
-        >
+      <div className="flex gap-3 pt-1 sm:justify-end sm:pt-0">
+        <button type="button" onClick={() => onAdjust(component)} className="text-sm font-medium text-accent hover:underline">
           Adjust
         </button>
-        <button
-          type="button"
-          onClick={() => onHistory(component)}
-          className="min-h-11 rounded-md px-2 text-xs font-medium text-slate-600 hover:bg-slate-50"
-        >
+        <button type="button" onClick={() => onHistory(component)} className="text-sm font-medium text-accent hover:underline">
           History
         </button>
       </div>
@@ -71,4 +55,3 @@ function ComponentRowImpl({ component, onAdjust, onHistory }: ComponentRowProps)
 }
 
 export const ComponentRow = memo(ComponentRowImpl);
-export { GRID_COLS };

@@ -92,16 +92,15 @@ export function PickupCard({ data }: { data: PickupCardData }) {
   }
 
   return (
-    <div>
+    <div className="flex flex-col gap-4">
       <div
         ref={cardRef}
-        style={{ width: CARD_WIDTH }}
-        className="mx-auto rounded-xl border border-slate-200 bg-white p-6"
+        className="mx-auto flex w-full max-w-[600px] flex-col gap-4 rounded-2xl bg-white p-6 text-slate-900"
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Component pickup</h2>
-            <p className="mt-1 font-mono text-sm font-semibold text-indigo-600">{data.short_code}</p>
+            <h2 className="text-lg font-semibold">Component pickup</h2>
+            <p className="font-mono text-sm font-semibold text-emerald-600">{data.short_code}</p>
           </div>
           {qrDataUrl ? (
             <img
@@ -109,49 +108,46 @@ export function PickupCard({ data }: { data: PickupCardData }) {
               alt={`QR code for request ${data.short_code}`}
               width={QR_SIZE}
               height={QR_SIZE}
-              className="shrink-0 rounded-md border border-slate-100"
+              className="rounded-lg"
             />
           ) : (
-            <div
-              style={{ width: QR_SIZE, height: QR_SIZE }}
-              className="shrink-0 animate-pulse rounded-md bg-slate-100"
-            />
+            <div style={{ width: QR_SIZE, height: QR_SIZE }} className="rounded-lg bg-slate-100" />
           )}
         </div>
 
-        <div className="mt-3 space-y-0.5 text-sm text-slate-700">
-          <p className="font-medium">{data.requester_name}</p>
-          <p>{data.phone}</p>
-          {data.project_name && <p>{data.project_name}</p>}
+        <div>
+          <p className="text-sm font-medium">{data.requester_name}</p>
+          <p className="text-sm text-slate-500">{data.phone}</p>
+          {data.project_name && <p className="text-sm text-slate-500">{data.project_name}</p>}
         </div>
 
-        <table className="mt-4 w-full text-sm">
+        <table className="w-full border-collapse text-sm">
           <thead>
-            <tr className="border-b border-slate-200 text-left text-slate-500">
-              <th className="py-1 font-medium">Component</th>
-              <th className="py-1 font-medium">Location</th>
-              <th className="py-1 text-right font-medium">Qty</th>
+            <tr className="border-b border-slate-200 text-left text-xs font-medium text-slate-500">
+              <th className="py-2">Component</th>
+              <th className="py-2">Location</th>
+              <th className="py-2 text-right">Qty</th>
             </tr>
           </thead>
           <tbody>
             {data.items.map((item) => (
               <tr key={item.name} className="border-b border-slate-100">
-                <td className="py-1.5 text-slate-900">{item.name}</td>
-                <td className="py-1.5 text-slate-600">{item.location ?? "—"}</td>
-                <td className="py-1.5 text-right text-slate-900">{item.approved_qty}</td>
+                <td className="py-2">{item.name}</td>
+                <td className="py-2 text-slate-500">{item.location ?? "—"}</td>
+                <td className="py-2 text-right">{item.approved_qty}</td>
               </tr>
             ))}
           </tbody>
         </table>
 
         {data.expires_at && (
-          <p className="mt-4 text-xs text-amber-600">
+          <p className="text-xs text-slate-500">
             Valid until {new Date(data.expires_at).toLocaleString()}
           </p>
         )}
       </div>
 
-      <div className="mt-4 flex flex-wrap justify-center gap-2">
+      <div className="flex flex-wrap gap-2">
         <Button
           variant="secondary"
           loading={downloading}

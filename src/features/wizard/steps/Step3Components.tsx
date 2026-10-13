@@ -16,18 +16,14 @@ export function Step3Components({ cart, onCartChange, onBack, onNext }: Step3Pro
   const count = Object.keys(cart).length;
 
   return (
-    <div className="pb-20">
-      <h1 className="mb-4 text-xl font-semibold text-slate-900">Select components</h1>
+    <div className="flex flex-col gap-4">
+      <h1 className="text-xl font-semibold text-foreground">Select components</h1>
 
       {catalogQuery.isLoading && <SkeletonLines count={6} />}
       {catalogQuery.isError && (
-        <p className="text-sm text-red-600">
+        <p className="text-sm text-danger">
           Couldn't load the component list.{" "}
-          <button
-            type="button"
-            className="font-medium underline"
-            onClick={() => catalogQuery.refetch()}
-          >
+          <button type="button" onClick={() => catalogQuery.refetch()} className="font-medium underline">
             Retry
           </button>
         </p>
@@ -36,15 +32,15 @@ export function Step3Components({ cart, onCartChange, onBack, onNext }: Step3Pro
         <ComponentPicker items={catalogQuery.data} cart={cart} onChange={onCartChange} />
       )}
 
-      <div className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between border-t border-slate-200 bg-white p-4 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
-        <Button variant="secondary" onClick={onBack}>
+      <div className="flex items-center gap-3">
+        <Button variant="secondary" onClick={onBack} className="shrink-0 rounded-full">
           Back
         </Button>
-        <span className="text-sm font-medium text-slate-600">
+        <span className="flex-1 text-center text-sm text-muted">
           {count} component{count === 1 ? "" : "s"} selected
         </span>
-        <Button disabled={count === 0} onClick={onNext}>
-          Next
+        <Button disabled={count === 0} onClick={onNext} className="shrink-0 rounded-full">
+          Next →
         </Button>
       </div>
     </div>

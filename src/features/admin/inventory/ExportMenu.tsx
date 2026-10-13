@@ -65,18 +65,18 @@ export function ExportMenu({ search, filter }: ExportMenuProps) {
       </Button>
 
       {menuOpen && !exporting && (
-        <div className="absolute right-0 z-20 mt-1 w-64 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg">
+        <div className="absolute right-0 z-10 mt-2 flex w-64 flex-col overflow-hidden rounded-xl bg-surface shadow-overlay">
           <button
             type="button"
             onClick={() => void runExport("current")}
-            className="block min-h-11 w-full px-3 py-2 text-left text-sm hover:bg-slate-50"
+            className="px-4 py-2.5 text-left text-sm text-foreground hover:bg-default"
           >
             Current view (search and filter applied)
           </button>
           <button
             type="button"
             onClick={() => void runExport("all")}
-            className="block min-h-11 w-full px-3 py-2 text-left text-sm hover:bg-slate-50"
+            className="px-4 py-2.5 text-left text-sm text-foreground hover:bg-default"
           >
             All components
           </button>
@@ -84,15 +84,15 @@ export function ExportMenu({ search, filter }: ExportMenuProps) {
       )}
 
       {progress && (
-        <div className="absolute right-0 z-20 mt-1 w-64 rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
-          <p className="mb-2 text-xs text-slate-600">
+        <div className="absolute right-0 z-10 mt-2 flex w-64 flex-col gap-2 rounded-xl bg-surface p-4 shadow-overlay">
+          <p className="text-sm text-muted">
             {progress.fetched} of {progress.total || "?"} rows
           </p>
           <ProgressBar progress={{ done: progress.fetched, total: progress.total || 1 }} />
           <button
             type="button"
             onClick={() => abortRef.current?.abort()}
-            className="mt-2 min-h-11 w-full rounded-md text-sm font-medium text-red-600 hover:bg-red-50"
+            className="self-start text-sm font-medium text-danger hover:underline"
           >
             Cancel
           </button>

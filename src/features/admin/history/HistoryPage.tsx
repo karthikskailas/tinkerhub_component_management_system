@@ -47,8 +47,8 @@ export function HistoryPage() {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-57px)] md:flex-row">
-      <div className="flex-1">
+    <div>
+      <div>
         <RequestListShell
           title="History"
           countLabel={list.count !== undefined ? `${list.count} requests` : undefined}

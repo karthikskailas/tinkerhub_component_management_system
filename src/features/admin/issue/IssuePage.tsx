@@ -33,8 +33,8 @@ export function IssuePage() {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-57px)] md:flex-row">
-      <div className="flex-1">
+    <div>
+      <div>
         <RequestListShell
           title="Issue"
           countLabel={list.count !== undefined ? `${list.count} waiting for pickup` : undefined}
