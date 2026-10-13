@@ -1,18 +1,35 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { SkeletonLines } from "../../components/ui/Skeleton";
 import { Stepper } from "../../components/ui/Stepper";
 import { LAST_REQUEST_ID_KEY, local } from "../../lib/storage";
 import { useAuth } from "../auth/useAuth";
 import { useCatalog } from "../catalog/useCatalog";
 import type { CartLine } from "../catalog/ComponentPicker";
 import { OpenRequestBanner } from "../requests/OpenRequestBanner";
-import { GuideStep } from "./steps/GuideStep";
 import { Step1Path } from "./steps/Step1Path";
-import { Step2Details } from "./steps/Step2Details";
-import { Step3Components } from "./steps/Step3Components";
-import { Step4Review } from "./steps/Step4Review";
 import { useDraft } from "./useDraft";
 import type { ResubmitResult } from "../requests/api";
+
+// Step 1 is the very first thing anyone sees, so it stays in the main
+// Wizard chunk. Steps 2-4 (and the "No" path's guide) pull in
+// react-hook-form/zod and @tanstack/react-virtual, which only the person
+// actually filling the form needs — splitting them here keeps the
+// "/" route's initial payload to just Step 1's two buttons.
+const GuideStep = lazy(() => import("./steps/GuideStep").then((m) => ({ default: m.GuideStep })));
+const Step2Details = lazy(() =>
+  import("./steps/Step2Details").then((m) => ({ default: m.Step2Details })),
+);
+const Step3Components = lazy(() =>
+  import("./steps/Step3Components").then((m) => ({ default: m.Step3Components })),
+);
+const Step4Review = lazy(() =>
+  import("./steps/Step4Review").then((m) => ({ default: m.Step4Review })),
+);
+
+function StepFallback() {
+  return <SkeletonLines count={5} />;
+}
 
 const STEP_LABELS = ["Project", "Details", "Components", "Review"];
 
@@ -105,39 +122,41 @@ export function Wizard() {
         />
       )}
 
-      {draft.step === 1 && draft.path === "new" && (
-        <GuideStep
-          onBack={() => setDraft((prev) => ({ ...prev, path: null }))}
-          onContinue={() => goTo(2)}
-        />
-      )}
+      <Suspense fallback={<StepFallback />}>
+        {draft.step === 1 && draft.path === "new" && (
+          <GuideStep
+            onBack={() => setDraft((prev) => ({ ...prev, path: null }))}
+            onContinue={() => goTo(2)}
+          />
+        )}
 
-      {draft.step === 2 && (
-        <Step2Details
-          draft={draft}
-          userId={user.id}
-          onBack={() => goTo(1)}
-          onNext={(patch) => setDraft((prev) => ({ ...prev, ...patch, step: 3 }))}
-        />
-      )}
+        {draft.step === 2 && (
+          <Step2Details
+            draft={draft}
+            userId={user.id}
+            onBack={() => goTo(1)}
+            onNext={(patch) => setDraft((prev) => ({ ...prev, ...patch, step: 3 }))}
+          />
+        )}
 
-      {draft.step === 3 && (
-        <Step3Components
-          cart={draft.cart}
-          onCartChange={(cart) => setDraft((prev) => ({ ...prev, cart }))}
-          onBack={() => goTo(2)}
-          onNext={() => goTo(4)}
-        />
-      )}
+        {draft.step === 3 && (
+          <Step3Components
+            cart={draft.cart}
+            onCartChange={(cart) => setDraft((prev) => ({ ...prev, cart }))}
+            onBack={() => goTo(2)}
+            onNext={() => goTo(4)}
+          />
+        )}
 
-      {draft.step === 4 && (
-        <Step4Review
-          draft={draft}
-          onBack={() => goTo(3)}
-          onEditStep={goTo}
-          onSubmitted={handleSubmitted}
-        />
-      )}
+        {draft.step === 4 && (
+          <Step4Review
+            draft={draft}
+            onBack={() => goTo(3)}
+            onEditStep={goTo}
+            onSubmitted={handleSubmitted}
+          />
+        )}
+      </Suspense>
     </div>
   );
 }

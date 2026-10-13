@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "../../../../components/ui/Button";
 import { Input } from "../../../../components/ui/Input";
 import { Modal } from "../../../../components/ui/Modal";
+import { useOnlineStatus } from "../../../../lib/useOnlineStatus";
 import { PreviewTable } from "./PreviewTable";
 import { downloadInvalidRows, downloadTemplate } from "./template";
 import { ProgressBar, SummaryCard } from "./UploadPrimitives";
@@ -23,6 +24,7 @@ interface UploadDialogProps {
 
 export function UploadDialog({ open, onClose, onCommitted }: UploadDialogProps) {
   const flow = useUploadFlow();
+  const isOnline = useOnlineStatus();
   const [activeTab, setActiveTab] = useState<UploadDiff>("new");
   const [reason, setReason] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -182,11 +184,18 @@ export function UploadDialog({ open, onClose, onCommitted }: UploadDialogProps) 
               Cancel
             </Button>
             <Button
-              disabled={flow.sendableCount === 0 || reason.trim().length === 0 || flow.isCommitting}
+              disabled={
+                flow.sendableCount === 0 ||
+                reason.trim().length === 0 ||
+                flow.isCommitting ||
+                !isOnline
+              }
               loading={flow.isCommitting}
               onClick={() => void flow.commit(reason.trim())}
             >
-              Apply {flow.sendableCount} change{flow.sendableCount === 1 ? "" : "s"}
+              {isOnline
+                ? `Apply ${flow.sendableCount} change${flow.sendableCount === 1 ? "" : "s"}`
+                : "Offline"}
             </Button>
           </div>
         </div>

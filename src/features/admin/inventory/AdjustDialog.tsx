@@ -5,6 +5,7 @@ import { Input, Textarea } from "../../../components/ui/Input";
 import { Modal } from "../../../components/ui/Modal";
 import { toast } from "../../../components/ui/Toast";
 import { parseSupabaseError } from "../../../lib/errors";
+import { useOnlineStatus } from "../../../lib/useOnlineStatus";
 import { adjustComponent } from "./api";
 import type { ComponentRow } from "./api";
 
@@ -15,6 +16,7 @@ interface AdjustDialogProps {
 }
 
 export function AdjustDialog({ component, onClose, onAdjusted }: AdjustDialogProps) {
+  const isOnline = useOnlineStatus();
   const [newCount, setNewCount] = useState(component?.count ?? 0);
   const [reason, setReason] = useState("");
 
@@ -85,11 +87,11 @@ export function AdjustDialog({ component, onClose, onAdjusted }: AdjustDialogPro
               Cancel
             </Button>
             <Button
-              disabled={!valid || mutation.isPending}
+              disabled={!valid || mutation.isPending || !isOnline}
               loading={mutation.isPending}
               onClick={() => mutation.mutate()}
             >
-              Save
+              {isOnline ? "Save" : "Offline"}
             </Button>
           </div>
         </>

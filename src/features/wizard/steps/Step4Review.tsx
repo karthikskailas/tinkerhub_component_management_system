@@ -4,6 +4,7 @@ import { Button } from "../../../components/ui/Button";
 import { toast } from "../../../components/ui/Toast";
 import { parseSupabaseError } from "../../../lib/errors";
 import { supabase } from "../../../lib/supabase";
+import { useOnlineStatus } from "../../../lib/useOnlineStatus";
 import { submitRequest } from "../../requests/api";
 import type { WizardDraft } from "../types";
 
@@ -16,6 +17,7 @@ interface Step4Props {
 
 export function Step4Review({ draft, onBack, onEditStep, onSubmitted }: Step4Props) {
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
+  const isOnline = useOnlineStatus();
 
   useEffect(() => {
     if (!draft.screenshotPath) return;
@@ -85,7 +87,14 @@ export function Step4Review({ draft, onBack, onEditStep, onSubmitted }: Step4Pro
 
       <Section title="Screenshot" onEdit={() => onEditStep(2)}>
         {signedUrl ? (
-          <img src={signedUrl} alt="Screenshot" className="h-24 w-24 rounded-md object-cover" />
+          <img
+            src={signedUrl}
+            alt="Screenshot"
+            width={96}
+            height={96}
+            loading="lazy"
+            className="h-24 w-24 rounded-md object-cover"
+          />
         ) : (
           <p className="text-sm text-slate-500">Loading preview...</p>
         )}
@@ -106,8 +115,12 @@ export function Step4Review({ draft, onBack, onEditStep, onSubmitted }: Step4Pro
         <Button variant="secondary" onClick={onBack} disabled={mutation.isPending}>
           Back
         </Button>
-        <Button onClick={() => mutation.mutate()} loading={mutation.isPending}>
-          Submit for review
+        <Button
+          onClick={() => mutation.mutate()}
+          loading={mutation.isPending}
+          disabled={!isOnline}
+        >
+          {isOnline ? "Submit for review" : "Offline"}
         </Button>
       </div>
     </div>

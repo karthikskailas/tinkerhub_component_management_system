@@ -394,3 +394,21 @@ export async function verifyReturn(
   const { error } = await supabase.rpc("verify_return", args);
   if (error) throw error;
 }
+
+// Scan/type-a-code lookup (Issue/Returns search bars). Depends on 0012's
+// request_code column — see that migration for why `id` alone can't be
+// ilike-matched. Looks up by code regardless of status: the destination
+// detail panel already has its own "not in the expected status" messaging,
+// so this doesn't need to duplicate that check.
+export async function findRequestIdByCode(code: string): Promise<string | null> {
+  const trimmed = code.trim();
+  if (!trimmed) return null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase.from("requests") as any)
+    .select("id")
+    .ilike("request_code", trimmed)
+    .limit(1)
+    .maybeSingle();
+  if (error) return null;
+  return data?.id ?? null;
+}

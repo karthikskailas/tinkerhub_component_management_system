@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { RequestListShell } from "../requests/RequestListShell";
+import { ScanCodeInput } from "../requests/ScanCodeInput";
 import { useRequestList } from "../requests/useRequestList";
 import { IssueDetailPanel } from "./IssueDetailPanel";
 import { IssueRow } from "./IssueRow";
@@ -37,6 +38,7 @@ export function IssuePage() {
         <RequestListShell
           title="Issue"
           countLabel={list.count !== undefined ? `${list.count} waiting for pickup` : undefined}
+          headerActions={<ScanCodeInput onFound={openRequest} />}
           search={search}
           onSearchChange={setSearch}
           searchPlaceholder="Search by code, name or phone..."

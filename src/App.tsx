@@ -1,4 +1,5 @@
 import { BrowserRouter } from "react-router-dom";
+import { OfflineBanner } from "./components/ui/OfflineBanner";
 import { Toaster } from "./components/ui/Toast";
 import { AuthProvider } from "./features/auth/AuthProvider";
 import { useAuth } from "./features/auth/useAuth";
@@ -38,6 +39,7 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <OfflineBanner />
         <AuthGate>
           <AppRoutes />
         </AuthGate>

@@ -5,6 +5,7 @@ import { Modal } from "../../../components/ui/Modal";
 import { SkeletonLines } from "../../../components/ui/Skeleton";
 import { toast } from "../../../components/ui/Toast";
 import { parseSupabaseError } from "../../../lib/errors";
+import { useOnlineStatus } from "../../../lib/useOnlineStatus";
 import { approveRequest, createScreenshotSignedUrl, fetchRequestDetail, rejectRequest } from "./api";
 import type { PickupCardData, RequestDetail } from "./api";
 import { RejectDialog } from "./RejectDialog";
@@ -23,6 +24,7 @@ export function RequestDetailPanel({
   onRejected,
 }: RequestDetailPanelProps) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
   const [approvedQtys, setApprovedQtys] = useState<Record<string, number>>({});
   const [screenshotUrl, setScreenshotUrl] = useState<string | null | "loading">("loading");
   const [zoomOpen, setZoomOpen] = useState(false);
@@ -155,6 +157,9 @@ export function RequestDetailPanel({
             <img
               src={screenshotUrl}
               alt="Request screenshot"
+              width={128}
+              height={128}
+              loading="lazy"
               className="h-32 w-32 rounded-lg border border-slate-200 object-cover"
             />
           </button>
@@ -215,18 +220,24 @@ export function RequestDetailPanel({
         </p>
       )}
 
+      {!isOnline && (
+        <p className="mt-3 text-center text-xs text-amber-600">
+          You're offline — approve/reject are disabled until you reconnect.
+        </p>
+      )}
+
       <div className="mt-6 flex gap-2">
         <Button
           variant="danger"
           className="flex-1"
-          disabled={notPendingAnymore || approveMutation.isPending}
+          disabled={notPendingAnymore || approveMutation.isPending || !isOnline}
           onClick={() => setRejectOpen(true)}
         >
           Reject
         </Button>
         <Button
           className="flex-1"
-          disabled={notPendingAnymore || !anyPositive || approveMutation.isPending}
+          disabled={notPendingAnymore || !anyPositive || approveMutation.isPending || !isOnline}
           loading={approveMutation.isPending}
           onClick={() => approveMutation.mutate()}
         >
@@ -243,7 +254,12 @@ export function RequestDetailPanel({
 
       <Modal open={zoomOpen} onClose={() => setZoomOpen(false)} variant="bare">
         {typeof screenshotUrl === "string" && (
-          <img src={screenshotUrl} alt="Request screenshot, zoomed" className="max-h-[85vh] rounded-lg" />
+          <img
+            src={screenshotUrl}
+            alt="Request screenshot, zoomed"
+            loading="lazy"
+            className="max-h-[85vh] rounded-lg"
+          />
         )}
       </Modal>
     </DetailShell>

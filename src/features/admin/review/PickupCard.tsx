@@ -1,10 +1,11 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "../../../components/ui/Button";
 import { toast } from "../../../components/ui/Toast";
 import { buildWhatsAppUrl } from "../../../lib/whatsapp";
 import type { PickupCardData } from "./api";
 
 const CARD_WIDTH = 600;
+const QR_SIZE = 120;
 
 function buildSummaryText(data: PickupCardData): string {
   const lines = [
@@ -22,7 +23,22 @@ export function PickupCard({ data }: { data: PickupCardData }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [downloading, setDownloading] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const summaryText = buildSummaryText(data);
+
+  useEffect(() => {
+    let active = true;
+    // Encodes only the request code — never the phone number or any other
+    // personal data — so the QR is safe to hand over on a printed/shown card.
+    import("qrcode").then(({ default: QRCode }) =>
+      QRCode.toDataURL(data.short_code, { width: QR_SIZE, margin: 1 }).then((url) => {
+        if (active) setQrDataUrl(url);
+      }),
+    );
+    return () => {
+      active = false;
+    };
+  }, [data.short_code]);
 
   async function handleDownload() {
     setDownloading(true);
@@ -82,8 +98,26 @@ export function PickupCard({ data }: { data: PickupCardData }) {
         style={{ width: CARD_WIDTH }}
         className="mx-auto rounded-xl border border-slate-200 bg-white p-6"
       >
-        <h2 className="text-lg font-semibold text-slate-900">Component pickup</h2>
-        <p className="mt-1 font-mono text-sm font-semibold text-indigo-600">{data.short_code}</p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Component pickup</h2>
+            <p className="mt-1 font-mono text-sm font-semibold text-indigo-600">{data.short_code}</p>
+          </div>
+          {qrDataUrl ? (
+            <img
+              src={qrDataUrl}
+              alt={`QR code for request ${data.short_code}`}
+              width={QR_SIZE}
+              height={QR_SIZE}
+              className="shrink-0 rounded-md border border-slate-100"
+            />
+          ) : (
+            <div
+              style={{ width: QR_SIZE, height: QR_SIZE }}
+              className="shrink-0 animate-pulse rounded-md bg-slate-100"
+            />
+          )}
+        </div>
 
         <div className="mt-3 space-y-0.5 text-sm text-slate-700">
           <p className="font-medium">{data.requester_name}</p>
@@ -118,10 +152,15 @@ export function PickupCard({ data }: { data: PickupCardData }) {
       </div>
 
       <div className="mt-4 flex flex-wrap justify-center gap-2">
-        <Button variant="secondary" loading={downloading} onClick={handleDownload}>
+        <Button
+          variant="secondary"
+          loading={downloading}
+          disabled={!qrDataUrl}
+          onClick={handleDownload}
+        >
           Download as PNG
         </Button>
-        <Button loading={sharing} onClick={handleShare}>
+        <Button loading={sharing} disabled={!qrDataUrl} onClick={handleShare}>
           Share via WhatsApp
         </Button>
         <Button variant="ghost" onClick={handleCopyText}>

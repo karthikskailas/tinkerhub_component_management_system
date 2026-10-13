@@ -14,6 +14,7 @@ function ExampleImageModal({ onClose }: { onClose: () => void }) {
       <img
         src={EXAMPLE_IMAGE_SRC}
         alt="Example TinkerHub project page: title, description, tags, and your name under Collaborators"
+        loading="lazy"
         className="max-h-[80vh] max-w-full rounded-lg object-contain"
         onClick={(e) => e.stopPropagation()}
       />
@@ -57,6 +58,7 @@ export function ExampleImageThumbnail({ className }: { className?: string }) {
       <img
         src={EXAMPLE_IMAGE_SRC}
         alt="Example TinkerHub project page — tap to zoom"
+        loading="lazy"
         className="w-full rounded-lg border border-slate-200 object-cover"
         onError={(e) => {
           e.currentTarget.style.display = "none";

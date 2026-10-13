@@ -5,6 +5,7 @@ import { Modal } from "../../../components/ui/Modal";
 import { SkeletonLines } from "../../../components/ui/Skeleton";
 import { toast } from "../../../components/ui/Toast";
 import { parseSupabaseError } from "../../../lib/errors";
+import { useOnlineStatus } from "../../../lib/useOnlineStatus";
 import { fetchRequestDetail, issueRequest } from "../requests/api";
 import { DetailShell } from "../requests/DetailShell";
 import { invalidateAfterRequestMutation } from "../requests/invalidate";
@@ -20,6 +21,7 @@ interface IssueDetailPanelProps {
 
 export function IssueDetailPanel({ requestId, onClose, onIssued }: IssueDetailPanelProps) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
   const [issuedQtys, setIssuedQtys] = useState<Record<string, number>>({});
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pickupCard, setPickupCard] = useState<PickupCardData | null>(null);
@@ -169,10 +171,10 @@ export function IssueDetailPanel({ requestId, onClose, onIssued }: IssueDetailPa
         </Button>
         <Button
           className="flex-1"
-          disabled={notApproved || approvedLines.length === 0 || issueMutation.isPending}
+          disabled={notApproved || approvedLines.length === 0 || issueMutation.isPending || !isOnline}
           onClick={() => setConfirmOpen(true)}
         >
-          Issue components
+          {isOnline ? "Issue components" : "Offline"}
         </Button>
       </div>
 

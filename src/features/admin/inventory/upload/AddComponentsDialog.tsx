@@ -3,6 +3,7 @@ import { Button } from "../../../../components/ui/Button";
 import { Input } from "../../../../components/ui/Input";
 import { Modal } from "../../../../components/ui/Modal";
 import { toast } from "../../../../components/ui/Toast";
+import { useOnlineStatus } from "../../../../lib/useOnlineStatus";
 import { MAX_GRID_ROWS, useAddComponentsFlow } from "./useAddComponentsFlow";
 import type { GridRow } from "./useAddComponentsFlow";
 import { ProgressBar, SummaryCard } from "./UploadPrimitives";
@@ -17,6 +18,7 @@ interface AddComponentsDialogProps {
 
 export function AddComponentsDialog({ open, onClose, onAdded }: AddComponentsDialogProps) {
   const flow = useAddComponentsFlow();
+  const isOnline = useOnlineStatus();
   const [reason, setReason] = useState("Manual add");
   const cellRefs = useRef<Map<string, HTMLInputElement>>(new Map());
 
@@ -239,11 +241,18 @@ export function AddComponentsDialog({ open, onClose, onAdded }: AddComponentsDia
                 Cancel
               </Button>
               <Button
-                disabled={flow.sendableCount === 0 || reason.trim().length === 0 || flow.step === "committing"}
+                disabled={
+                  flow.sendableCount === 0 ||
+                  reason.trim().length === 0 ||
+                  flow.step === "committing" ||
+                  !isOnline
+                }
                 loading={flow.step === "committing"}
                 onClick={() => void flow.commit(reason.trim())}
               >
-                Apply {flow.sendableCount} change{flow.sendableCount === 1 ? "" : "s"}
+                {isOnline
+                  ? `Apply ${flow.sendableCount} change${flow.sendableCount === 1 ? "" : "s"}`
+                  : "Offline"}
               </Button>
             </div>
           </div>

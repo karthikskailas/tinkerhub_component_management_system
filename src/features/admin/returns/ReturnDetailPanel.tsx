@@ -5,6 +5,7 @@ import { Modal } from "../../../components/ui/Modal";
 import { SkeletonLines } from "../../../components/ui/Skeleton";
 import { toast } from "../../../components/ui/Toast";
 import { parseSupabaseError } from "../../../lib/errors";
+import { useOnlineStatus } from "../../../lib/useOnlineStatus";
 import { fetchRequestDetail, verifyReturn } from "../requests/api";
 import type { ItemCondition } from "../requests/api";
 import { DetailShell } from "../requests/DetailShell";
@@ -24,6 +25,7 @@ interface ReturnDetailPanelProps {
 
 export function ReturnDetailPanel({ requestId, onClose, onVerified }: ReturnDetailPanelProps) {
   const queryClient = useQueryClient();
+  const isOnline = useOnlineStatus();
   const [lines, setLines] = useState<Record<string, LineState>>({});
   const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -245,10 +247,10 @@ export function ReturnDetailPanel({ requestId, onClose, onVerified }: ReturnDeta
       <div className="mt-6">
         <Button
           className="w-full"
-          disabled={notIssued || touchedEntries.length === 0 || verifyMutation.isPending}
+          disabled={notIssued || touchedEntries.length === 0 || verifyMutation.isPending || !isOnline}
           onClick={() => setConfirmOpen(true)}
         >
-          Verify return
+          {isOnline ? "Verify return" : "Offline"}
         </Button>
       </div>
 

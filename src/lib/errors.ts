@@ -21,6 +21,25 @@ const FRIENDLY: Record<string, string> = {
 };
 
 const DEFAULT_MESSAGE = "Something went wrong. Please try again.";
+const NETWORK_MESSAGE = "Network error, try again.";
+
+// Genuine network failures (offline, DNS, CORS, a dropped connection) never
+// reach the backend at all, so they never look like "E_CODE: detail" — the
+// browser/fetch layer's own wording is the only signal available. This list
+// covers Chrome/Firefox/Safari's actual TypeError messages for a failed
+// fetch, plus supabase-js's own network-error passthroughs.
+const NETWORK_PATTERN = /failed to fetch|networkerror|network request failed|load failed|fetch failed/i;
+
+function isNetworkError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const name = "name" in error ? String((error as { name?: unknown }).name) : "";
+  const message = "message" in error ? String((error as { message?: unknown }).message) : "";
+  // AbortError covers both the 20s request timeout (lib/supabase.ts) and a
+  // user-cancelled export; either way "network error, try again" is the
+  // right framing for a request that never got a response.
+  if (name === "AbortError") return true;
+  return name === "TypeError" && NETWORK_PATTERN.test(message);
+}
 
 export interface ParsedError {
   code: string | null;
@@ -29,6 +48,10 @@ export interface ParsedError {
 }
 
 export function parseSupabaseError(error: unknown): ParsedError {
+  if (isNetworkError(error)) {
+    return { code: "E_NETWORK", detail: null, message: NETWORK_MESSAGE };
+  }
+
   const raw = extractMessage(error);
   if (!raw) return { code: null, detail: null, message: DEFAULT_MESSAGE };
 

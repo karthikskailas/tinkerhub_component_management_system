@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { RequestListShell } from "../requests/RequestListShell";
+import { ScanCodeInput } from "../requests/ScanCodeInput";
 import { useRequestList } from "../requests/useRequestList";
 import { ReturnDetailPanel } from "./ReturnDetailPanel";
 import { ReturnsRow } from "./ReturnsRow";
@@ -37,6 +38,7 @@ export function ReturnsPage() {
         <RequestListShell
           title="Returns"
           countLabel={list.count !== undefined ? `${list.count} awaiting return` : undefined}
+          headerActions={<ScanCodeInput onFound={openRequest} />}
           search={search}
           onSearchChange={setSearch}
           searchPlaceholder="Search by code, name or phone..."

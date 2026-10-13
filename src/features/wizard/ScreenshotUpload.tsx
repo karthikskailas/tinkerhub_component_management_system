@@ -73,7 +73,14 @@ export function ScreenshotUpload({
       {path && (
         <div className="mb-2 flex items-center gap-3 rounded-lg border border-slate-200 p-2">
           {previewUrl ? (
-            <img src={previewUrl} alt="Screenshot preview" className="h-16 w-16 rounded-md object-cover" />
+            <img
+              src={previewUrl}
+              alt="Screenshot preview"
+              width={64}
+              height={64}
+              loading="lazy"
+              className="h-16 w-16 rounded-md object-cover"
+            />
           ) : (
             <div className="flex h-16 w-16 items-center justify-center rounded-md bg-slate-100 text-xs text-slate-500">
               Saved
