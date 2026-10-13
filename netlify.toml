@@ -1,0 +1,18 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  # Vite 8 requires Node ^20.19 or >=22.12 — pin to 22 so Netlify's build
+  # image doesn't fall back to an older default that fails the engine check.
+  NODE_VERSION = "22"
+
+# React Router uses client-side (BrowserRouter) routing, so every path
+# (e.g. /admin/review, /request/:id, /r/:token) has to resolve to
+# index.html and let the app's own router take over — otherwise a direct
+# link or a page refresh on any non-root path 404s on Netlify's static
+# file server.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

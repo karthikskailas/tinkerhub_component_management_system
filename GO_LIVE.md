@@ -78,6 +78,28 @@ against your cloud project.
       availability — the Free plan has no PITR and short daily-backup
       retention; upgrade if the data is worth more than that window.
 
+## Frontend hosting (Netlify)
+
+- [ ] Site created from this repo on Netlify (or `netlify deploy`). Build
+      settings come from `netlify.toml` — build command `npm run build`,
+      publish directory `dist`, Node pinned to 22 (Vite 8 requires
+      `^20.19 || >=22.12`). The SPA redirect (`/*` → `/index.html`) in that
+      file is what lets direct links like `/admin/review` or `/request/:id`
+      work instead of 404ing on refresh.
+- [ ] Environment variables set in Site settings → Environment variables
+      (these are **public** — baked into the client bundle, same as the
+      anon key already is — never put a service-role key here):
+      - `VITE_SUPABASE_URL`
+      - `VITE_SUPABASE_ANON_KEY`
+      - `VITE_TURNSTILE_SITE_KEY`
+- [ ] Production domain added to Supabase Auth's Site URL / Additional
+      Redirect URLs and to Turnstile's allowed hostnames (same step as
+      under Auth above — do it once the Netlify domain, or your custom
+      domain pointed at it, is known).
+- [ ] `public/_headers` (security headers + CSP) ships as-is since it's a
+      Netlify-recognized filename under `public/`; confirm it's present in
+      a deployed response's headers after the first deploy.
+
 ## Rollback
 
 - **Frontend:** redeploy the previous build (keep the last known-good build
@@ -100,3 +122,6 @@ against your cloud project.
       success.
 - [ ] One admin can sign in and create a second staff account from the UI.
 - [ ] Backups are confirmed enabled in the dashboard.
+- [ ] Netlify deploy succeeds, all three `VITE_` env vars are set, and a
+      direct visit to a deep link (e.g. `/admin/login`) works without a
+      404.
