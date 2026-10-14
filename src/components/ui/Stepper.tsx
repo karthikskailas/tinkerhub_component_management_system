@@ -12,7 +12,7 @@ export function Stepper({ step, total, labels }: StepperProps) {
           <div
             key={i}
             aria-hidden
-            className={`h-1.5 flex-1 rounded-full ${i < step ? "bg-accent" : "bg-default"}`}
+            className={`h-2 flex-1 rounded-full ${i < step ? "bg-accent" : "bg-default"}`}
           />
         ))}
       </div>
