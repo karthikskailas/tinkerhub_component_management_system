@@ -64,7 +64,7 @@ export function UploadDialog({ open, onClose, onCommitted }: UploadDialogProps) 
 
   return (
     <Modal open={open} onClose={handleClose} titleId="upload-dialog-title">
-      <h2 id="upload-dialog-title" className="text-lg font-semibold text-foreground">
+      <h2 id="upload-dialog-title" className="text-xl font-bold text-foreground">
         Upload inventory sheet
       </h2>
 
@@ -146,7 +146,7 @@ export function UploadDialog({ open, onClose, onCommitted }: UploadDialogProps) 
             </button>
           )}
 
-          <p className="text-xs text-muted">
+          <p className="text-sm text-muted">
             Components missing from the sheet are never deleted. Invalid and unchanged rows are
             skipped.
           </p>

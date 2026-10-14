@@ -54,3 +54,4 @@ export const session = {
 
 export const LAST_REQUEST_ID_KEY = "inv.lastRequestId";
 export const WIZARD_DRAFT_KEY = "inv.wizardDraft";
+export const LAST_CONTACT_KEY = "inv.lastContact";

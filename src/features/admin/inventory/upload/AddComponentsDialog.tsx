@@ -65,7 +65,7 @@ export function AddComponentsDialog({ open, onClose, onAdded }: AddComponentsDia
       titleId="add-components-title"
       size="xl"
     >
-      <h2 id="add-components-title" className="text-lg font-semibold text-foreground">
+      <h2 id="add-components-title" className="text-xl font-bold text-foreground">
         Add components
       </h2>
 
@@ -87,7 +87,7 @@ export function AddComponentsDialog({ open, onClose, onAdded }: AddComponentsDia
                 <col className="w-[8%]" />
               </colgroup>
               <thead>
-                <tr className="border-b border-border text-left text-xs font-medium text-muted">
+                <tr className="border-b border-border text-left text-sm font-medium text-muted">
                   <th className="px-2 py-2">Name</th>
                   <th className="px-2 py-2">Location</th>
                   <th className="px-2 py-2">Count</th>
@@ -198,15 +198,15 @@ export function AddComponentsDialog({ open, onClose, onAdded }: AddComponentsDia
           <ul className="flex max-h-[min(40vh,320px)] flex-col gap-1 overflow-y-auto rounded-xl bg-background p-1">
             {flow.reviewRows.map((row) => (
               <li key={`${row.rowNumber}-${row.name}`} className="flex items-center gap-3 px-2 py-2">
-                <span className="text-xs text-muted">#{row.rowNumber}</span>
+                <span className="text-sm text-muted">#{row.rowNumber}</span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-foreground">{row.name}</p>
                   {row.diff === "changed" && (
-                    <p className="text-xs text-muted">Exists already: this will update the count.</p>
+                    <p className="text-sm text-muted">Exists already: this will update the count.</p>
                   )}
                 </div>
                 {row.diff === "invalid" ? (
-                  <span className="shrink-0 text-xs text-danger">{row.reason}</span>
+                  <span className="shrink-0 text-sm text-danger">{row.reason}</span>
                 ) : (
                   <span className="shrink-0 text-sm text-foreground">
                     {row.diff === "new" ? (

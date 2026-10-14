@@ -24,7 +24,7 @@ export function HistoryDrawer({ component, onClose }: HistoryDrawerProps) {
     >
       {component && (
         <>
-          <h2 id="history-drawer-title" className="text-lg font-semibold text-foreground">
+          <h2 id="history-drawer-title" className="text-xl font-bold text-foreground">
             History — {component.name}
           </h2>
           <p className="text-sm text-muted">Last 50 adjustments.</p>
@@ -43,12 +43,12 @@ export function HistoryDrawer({ component, onClose }: HistoryDrawerProps) {
                     <span className="text-sm font-medium text-foreground">
                       {entry.old_count ?? "—"} → {entry.new_count ?? "—"}
                     </span>
-                    <span className="text-xs text-muted">
+                    <span className="text-sm text-muted">
                       {new Date(entry.created_at).toLocaleString()}
                     </span>
                   </div>
                   {entry.reason && <p className="mt-1 text-sm text-muted">{entry.reason}</p>}
-                  <p className="mt-1 text-xs text-muted">
+                  <p className="mt-1 text-sm text-muted">
                     {entry.source ?? "unknown"} ·{" "}
                     {entry.actor_display_name ?? (entry.actor_id ? entry.actor_id.slice(0, 8) : "system")}
                   </p>

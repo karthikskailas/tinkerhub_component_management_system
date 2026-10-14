@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
 import { ConfirmDialog } from "../../components/ui/Dialog";
 import { toast } from "../../components/ui/Toast";
+import { useCatalog } from "../catalog/useCatalog";
 import type { RequestStatus } from "./api";
 
 export interface StatusViewItem {
@@ -36,8 +37,8 @@ const STATUS_COPY: Record<RequestStatus, { title: string; body: string; icon: St
     icon: "check",
   },
   approved: {
-    title: "Approved: collect your components",
-    body: "Show your request code to the inventory manager in person to receive your components.",
+    title: "Approved — ready for pickup",
+    body: "",
     icon: "check",
   },
   issued: {
@@ -93,36 +94,60 @@ function LifecycleTrack({ status }: { status: RequestStatus }) {
   const current = TRACK.findIndex((t) => t.status === status);
   if (current < 0) return null;
   return (
-    <ol className="flex w-full gap-1.5" aria-label="Request progress">
-      {TRACK.map((t, i) => (
-        <li key={t.status} aria-current={i === current ? "step" : undefined} className="flex flex-1 flex-col gap-1.5">
-          <span className={`h-1.5 rounded-full transition-colors duration-500 ${i <= current ? "bg-accent" : "bg-default"}`} />
-          <span className={`text-sm ${i === current ? "font-semibold text-foreground" : "text-muted"}`}>
-            {t.label}
-          </span>
-        </li>
-      ))}
+    <ol className="flex w-full items-start" aria-label="Request progress">
+      {TRACK.map((t, i) => {
+        const done = i <= current;
+        return (
+          <li
+            key={t.status}
+            aria-current={i === current ? "step" : undefined}
+            className="flex flex-1 flex-col items-center gap-1.5"
+          >
+            <span className="flex w-full items-center">
+              <span className={`h-0.5 flex-1 ${i === 0 ? "bg-transparent" : i <= current ? "bg-accent" : "bg-border"}`} />
+              <span
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 ${
+                  done ? "border-accent bg-accent text-accent-foreground" : "border-border bg-surface"
+                }`}
+              >
+                {done ? (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round"
+                    strokeLinejoin="round" className="h-4 w-4" aria-hidden>
+                    <path d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <span className="h-2 w-2 rounded-full bg-border" />
+                )}
+              </span>
+              <span className={`h-0.5 flex-1 ${i === TRACK.length - 1 ? "bg-transparent" : i < current ? "bg-accent" : "bg-border"}`} />
+            </span>
+            <span className={`text-sm ${i === current ? "font-semibold text-accent" : "text-muted"}`}>
+              {t.label}
+            </span>
+          </li>
+        );
+      })}
     </ol>
   );
 }
 
-function CodeQr({ code }: { code: string }) {
+function CodeQr({ code, size = 176 }: { code: string; size?: number }) {
   const [src, setSrc] = useState<string | null>(null);
   useEffect(() => {
     let live = true;
     import("qrcode").then(({ default: QRCode }) =>
-      QRCode.toDataURL(code, { width: 224, margin: 1 }).then((url) => {
+      QRCode.toDataURL(code, { width: size * 2, margin: 1 }).then((url) => {
         if (live) setSrc(url);
       }),
     );
     return () => {
       live = false;
     };
-  }, [code]);
+  }, [code, size]);
   return src ? (
-    <img src={src} alt={`QR code for request ${code}`} width={224} height={224} className="rounded-xl bg-white p-2" />
+    <img src={src} alt={`QR code for request ${code}`} width={size} height={size} className="shrink-0 rounded-xl bg-white p-1" />
   ) : (
-    <div className="h-56 w-56 rounded-xl bg-default" aria-hidden />
+    <div style={{ width: size, height: size }} className="rounded-xl bg-default" aria-hidden />
   );
 }
 
@@ -142,19 +167,68 @@ const ICON_PATH: Record<StatusIconKind, string> = {
 
 function StatusIcon({ kind }: { kind: StatusIconKind }) {
   return (
-    <div className={`flex h-16 w-16 items-center justify-center rounded-full ${ICON_STYLE[kind]}`}>
+    <div className={`relative flex h-20 w-20 items-center justify-center rounded-full ${ICON_STYLE[kind]}`}>
+      {kind === "check" &&
+        [0, 60, 120, 180, 240, 300].map((deg) => (
+          <span
+            key={deg}
+            aria-hidden
+            className="absolute left-1/2 top-1/2 h-0.5 w-2 rounded-full bg-success/40"
+            style={{ transform: `rotate(${deg}deg) translateX(3.1rem) translate(-50%, -50%)` }}
+          />
+        ))}
       <svg
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
         strokeWidth={2.5}
         strokeLinecap="round"
-        className="h-8 w-8"
+        className="h-10 w-10"
         aria-hidden
       >
         <path d={ICON_PATH[kind]} />
       </svg>
     </div>
+  );
+}
+
+const PATH = {
+  copy: "M9 9h10a1 1 0 011 1v10a1 1 0 01-1 1H9a1 1 0 01-1-1V10a1 1 0 011-1zM16 5H6a1 1 0 00-1 1v10",
+  link: "M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1",
+  calendar: "M7 3v4M17 3v4M4 9h16M6 5h12a2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2zM12 13v3l2 1",
+  trash: "M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3",
+  chip: "M9 3v4M15 3v4M9 17v4M15 17v4M3 9h4M3 15h4M17 9h4M17 15h4M8 7h8a1 1 0 011 1v8a1 1 0 01-1 1H8a1 1 0 01-1-1V8a1 1 0 011-1z",
+};
+
+function SvgIcon({ d, className = "h-5 w-5" }: { d: string; className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"
+      strokeLinejoin="round" className={className} aria-hidden>
+      <path d={d} />
+    </svg>
+  );
+}
+
+// Optional part photo; a neutral chip tile when there is none or it fails to load.
+function ItemPhoto({ url }: { url: string | null }) {
+  const [failed, setFailed] = useState(false);
+  if (!url || failed) {
+    return (
+      <span aria-hidden className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-default text-muted">
+        <SvgIcon d={PATH.chip} className="h-6 w-6" />
+      </span>
+    );
+  }
+  return (
+    <img
+      src={url}
+      alt=""
+      width={48}
+      height={48}
+      loading="lazy"
+      onError={() => setFailed(true)}
+      className="h-12 w-12 shrink-0 rounded-lg bg-default object-contain"
+    />
   );
 }
 
@@ -174,7 +248,14 @@ export function StatusView({
 }: StatusViewProps) {
   const navigate = useNavigate();
   const [confirmingCancel, setConfirmingCancel] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+  // On the pickup screen the code is the point; the parts list stays folded until asked for.
+  const collapsedCount = status === "approved" ? 0 : 3;
   const copy = STATUS_COPY[status];
+  const catalog = useCatalog();
+  const imageByName = new Map(
+    (catalog.data ?? []).filter((c) => c.imageUrl).map((c) => [c.name, c.imageUrl as string]),
+  );
 
   async function copyCode() {
     if (!code) return;
@@ -199,18 +280,28 @@ export function StatusView({
 
   return (
     <div className="min-h-dvh bg-transparent sm:px-4 sm:py-6">
-      <div className="motion-list mx-auto flex w-full max-w-lg flex-col items-center gap-4 p-6 text-center sm:rounded-3xl sm:bg-surface sm:p-8 sm:shadow-surface">
+      <div className="motion-list mx-auto flex w-full max-w-lg flex-col items-center gap-3 p-4 text-center sm:rounded-3xl sm:bg-surface sm:p-8 sm:shadow-surface">
+        <p className="self-start text-base font-bold tracking-tight text-foreground">
+          TinkerSpace <span className="text-accent">Maker Cart</span>
+        </p>
         <LifecycleTrack status={status} />
-        <StatusIcon kind={copy.icon} />
+        {status !== "approved" && <StatusIcon kind={copy.icon} />}
 
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold text-foreground">{copy.title}</h1>
+          <h1 className={`${status === "approved" ? "text-xl" : "text-2xl"} font-bold text-foreground`}>{copy.title}</h1>
           {copy.body && <p className="text-sm text-muted">{copy.body}</p>}
           {status === "approved" && (
-            <p className="mt-1 text-sm font-medium text-foreground">
-              {PICKUP_INFO ?? PICKUP_FALLBACK}
-              {expiresAt ? ` Collect by ${formatWhen(expiresAt)}.` : ""}
-            </p>
+            <div className="mt-2 flex w-full items-center gap-3 rounded-xl bg-accent/10 p-2.5 text-left">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent">
+                <SvgIcon d={PATH.calendar} />
+              </span>
+              <div className="flex min-w-0 flex-col">
+                {expiresAt && (
+                  <p className="text-base font-bold text-foreground">Collect by {formatWhen(expiresAt)}</p>
+                )}
+                <p className="text-sm text-muted">{PICKUP_INFO ?? PICKUP_FALLBACK}</p>
+              </div>
+            </div>
           )}
           {status === "expired" && expiresAt && (
             <p className="mt-1 text-sm text-muted">It expired on {formatWhen(expiresAt)}.</p>
@@ -224,67 +315,98 @@ export function StatusView({
           </div>
         )}
 
-        {projectName && (
+        {projectName && status !== "approved" && (
           <p className="text-sm text-muted">
             For project <span className="font-medium text-foreground">{projectName}</span>
           </p>
         )}
 
         {code && status === "approved" ? (
-          <div className="motion-pass w-full px-2 pb-3">
-            <div className="slip flex flex-col items-center gap-3 px-5 pb-6 pt-5 text-foreground">
-              <p className="font-mono text-xs font-semibold uppercase tracking-widest">
-                Pickup slip · Show this when collecting
-              </p>
-              <hr className="slip-rule w-full" />
-              <CodeQr code={code} />
-              <hr className="slip-rule w-full" />
-              <p className="font-mono text-3xl font-bold tracking-widest">{code}</p>
-              <button
-                type="button"
-                onClick={copyCode}
-                className="min-h-11 rounded-full bg-foreground px-5 text-sm font-medium text-white"
-              >
-                Copy code
-              </button>
+          <div className="motion-pass w-full">
+            <div className="flex w-full items-center gap-4 rounded-xl bg-surface p-3 text-left shadow-surface">
+              <CodeQr code={code} size={144} />
+              <div className="flex min-w-0 flex-1 flex-col items-start gap-2">
+                <div>
+                  <p className="text-sm font-medium uppercase tracking-wider text-muted">Pickup code</p>
+                  <p className="font-mono text-2xl font-bold tracking-wide text-foreground">{code}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={copyCode}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full bg-accent/10 px-4 text-sm font-semibold text-accent"
+                >
+                  <SvgIcon d={PATH.copy} className="h-4 w-4" />
+                  Copy code
+                </button>
+                <p className="text-sm text-muted">Turn brightness up if it won't scan.</p>
+              </div>
             </div>
           </div>
         ) : (
           code && (
-            <div className="flex w-full items-center justify-between rounded-xl bg-background p-3 text-left">
+            <div className="flex w-full items-center justify-between gap-3 rounded-xl bg-accent/10 p-4 text-left">
               <div>
-                <p className="text-sm text-muted">Request code</p>
-                <p className="font-mono text-lg font-semibold tracking-wider text-foreground">{code}</p>
+                <p className="text-sm font-medium uppercase tracking-wider text-muted">Request code</p>
+                <p className="font-mono text-3xl font-bold tracking-wider text-foreground">{code}</p>
               </div>
               <button
                 type="button"
                 onClick={copyCode}
-                className="min-h-11 rounded-full bg-surface px-4 text-sm font-medium text-accent shadow-surface"
+                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-accent/30 bg-surface px-4 text-sm font-semibold text-accent"
               >
+                <SvgIcon d={PATH.copy} className="h-4 w-4" />
                 Copy
               </button>
             </div>
           )
         )}
 
-        <div className="w-full rounded-xl bg-background p-4 text-left">
-          <span className="text-sm font-semibold text-foreground">Components</span>
-          <ul className="mt-2 flex flex-col gap-1.5">
-            {items.map((item) => (
-              <li key={item.name} className="flex items-center justify-between text-sm">
-                <span className="text-foreground">{item.name}</span>
-                <span className="text-muted">
-                  {item.approvedQty !== null && item.approvedQty !== item.qty ? (
-                    <>
-                      <span className="line-through">{item.qty}</span> {item.approvedQty}
-                    </>
-                  ) : (
-                    item.qty
-                  )}
-                </span>
-              </li>
-            ))}
+        <div className="w-full rounded-xl bg-surface px-4 py-1 text-left shadow-surface">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-base font-semibold text-foreground">Components ({items.length})</h2>
+            {collapsedCount === 0 && items.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowAll((v) => !v)}
+                aria-expanded={showAll}
+                className="inline-flex min-h-11 items-center text-sm font-semibold text-accent"
+              >
+                {showAll ? "Hide list" : "Show list"}
+              </button>
+            )}
+          </div>
+          <ul className="flex flex-col">
+            {(showAll ? items : items.slice(0, collapsedCount)).map((item) => {
+              const photo = imageByName.get(item.name) ?? null;
+              return (
+                <li
+                  key={item.name}
+                  className="flex items-center gap-3 border-b border-border py-2 last:border-b-0 last:pb-0"
+                >
+                  <ItemPhoto url={photo} />
+                  <span className="min-w-0 flex-1 truncate text-base text-foreground">{item.name}</span>
+                  <span className="shrink-0 font-mono text-base text-foreground">
+                    {item.approvedQty !== null && item.approvedQty !== item.qty ? (
+                      <>
+                        <span className="text-muted line-through">{item.qty}</span> {item.approvedQty}
+                      </>
+                    ) : (
+                      item.qty
+                    )}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
+          {collapsedCount > 0 && items.length > collapsedCount && (
+            <button
+              type="button"
+              onClick={() => setShowAll((v) => !v)}
+              className="mt-1 inline-flex min-h-11 items-center text-sm font-semibold text-accent"
+            >
+              {showAll ? "Hide list" : `Show all ${items.length}`}
+            </button>
+          )}
         </div>
 
         <div className="flex w-full flex-col gap-2">
@@ -301,20 +423,25 @@ export function StatusView({
           )}
 
           {publicToken && (
-            <Button
-              variant={status === "rejected" || status === "cancelled" || status === "expired" ? "ghost" : "secondary"}
+            <button
+              type="button"
               onClick={copyLink}
-              fullWidth
-              className="rounded-full"
+              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full border-2 border-accent/40 bg-surface px-5 text-base font-semibold text-accent"
             >
+              <SvgIcon d={PATH.link} />
               Copy status link
-            </Button>
+            </button>
           )}
 
           {isOwner && status === "pending" && onCancel && (
-            <Button variant="danger" onClick={() => setConfirmingCancel(true)} fullWidth className="rounded-full">
+            <button
+              type="button"
+              onClick={() => setConfirmingCancel(true)}
+              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full border-2 border-danger/40 bg-danger-soft px-5 text-base font-semibold text-danger"
+            >
+              <SvgIcon d={PATH.trash} />
               Cancel request
-            </Button>
+            </button>
           )}
         </div>
 

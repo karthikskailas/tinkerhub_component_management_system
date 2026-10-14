@@ -10,7 +10,7 @@ web
 TinkerHub community members and students who need electronic components for a project. They use the client side on their phones, on campus, often between other things. They have no account: each device signs in anonymously, and the phone number is the lookup key for their TinkerHub project. A separate staff side (inventory managers) reviews and issues requests; it is out of scope for client-side work.
 
 ## Product Purpose
-TinkerSpace Components Inventory lets members request parts from the lab's stock, get them reviewed, and collect them in person. Success is a student who submits a request in a few minutes and knows exactly what to do next, and an inventory manager who can verify and issue it quickly.
+TinkerSpace Maker Cart lets members request parts from the lab's stock, get them reviewed, and collect them in person. Success is a student who submits a request in a few minutes and knows exactly what to do next, and an inventory manager who can verify and issue it quickly.
 
 ## Positioning
 A request is tied to a verified TinkerHub project (proved by a screenshot of the project page on the TinkerHub app) and to live stock, so parts go to real projects and availability is never overpromised.
@@ -26,7 +26,7 @@ Four-step request: choose project path (registered or new), details plus screens
 - Undecided: exact pickup location and hours (not yet confirmed).
 
 ## Brand Commitments
-Product name shown to users: **TinkerSpace Components Inventory**. Part of the TinkerHub community. Existing accent is green (`--accent` in `src/index.css`); no logo asset exists yet.
+Product name shown to users: **TinkerSpace Maker Cart**. Part of the TinkerHub community. Client accent is TinkerHub purple (`--accent` in `src/index.css`); no logo asset exists yet.
 
 ## Evidence on Hand
 No logo, component photography, or testimonials exist. Do not fabricate them. Example screenshot guide is in `public/guide`.

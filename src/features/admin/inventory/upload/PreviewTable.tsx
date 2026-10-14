@@ -36,10 +36,10 @@ export function PreviewTable({ rows }: { rows: UploadPreviewRow[] }) {
               }}
               className="flex items-center gap-3 border-b border-border px-3"
             >
-              <span className="text-xs text-muted">#{row.rowNumber}</span>
+              <span className="text-sm text-muted">#{row.rowNumber}</span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-foreground">{row.name}</p>
-                {row.location && <p className="truncate text-xs text-muted">{row.location}</p>}
+                {row.location && <p className="truncate text-sm text-muted">{row.location}</p>}
               </div>
               {row.diff === "changed" || row.diff === "unchanged" || row.diff === "new" ? (
                 <span className="shrink-0 text-sm text-foreground">
@@ -53,7 +53,7 @@ export function PreviewTable({ rows }: { rows: UploadPreviewRow[] }) {
                   )}
                 </span>
               ) : (
-                <span className="shrink-0 text-xs text-danger">{row.reason}</span>
+                <span className="shrink-0 text-sm text-danger">{row.reason}</span>
               )}
             </div>
           );

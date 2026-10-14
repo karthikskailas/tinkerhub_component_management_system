@@ -44,6 +44,7 @@ export type Database = {
           count: number
           description: string | null
           id: string
+          image_url: string | null
           location: string | null
           name: string
           reserved: number
@@ -54,6 +55,7 @@ export type Database = {
           count?: number
           description?: string | null
           id?: string
+          image_url?: string | null
           location?: string | null
           name: string
           reserved?: number
@@ -64,6 +66,7 @@ export type Database = {
           count?: number
           description?: string | null
           id?: string
+          image_url?: string | null
           location?: string | null
           name?: string
           reserved?: number
@@ -372,6 +375,7 @@ export type Database = {
           available: number | null
           description: string | null
           id: string | null
+          image_url: string | null
           name: string | null
           returnable: boolean | null
         }
@@ -379,6 +383,7 @@ export type Database = {
           available?: never
           description?: string | null
           id?: string | null
+          image_url?: string | null
           name?: string | null
           returnable?: boolean | null
         }

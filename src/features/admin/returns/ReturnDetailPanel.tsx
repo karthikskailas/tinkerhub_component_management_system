@@ -8,7 +8,7 @@ import { parseSupabaseError } from "../../../lib/errors";
 import { useOnlineStatus } from "../../../lib/useOnlineStatus";
 import { fetchRequestDetail, verifyReturn } from "../requests/api";
 import type { ItemCondition } from "../requests/api";
-import { DetailShell } from "../requests/DetailShell";
+import { DetailShell, QtyInput, RequesterHeader, Section } from "../requests/DetailShell";
 import { invalidateAfterRequestMutation } from "../requests/invalidate";
 
 interface LineState {
@@ -146,123 +146,125 @@ export function ReturnDetailPanel({ requestId, onClose, onVerified }: ReturnDeta
   }
 
   return (
-    <DetailShell onClose={onClose}>
-      <h2 className="text-lg font-semibold text-foreground">{detail.requester_name}</h2>
-      <a href={`tel:${detail.phone}`} className="text-sm text-accent hover:underline">
-        {detail.phone}
-      </a>
-      <p className="text-sm text-muted">{detail.project_name ?? "Untitled project"}</p>
-
-      {outstanding.length > 1 && !notIssued && (
-        <Button variant="secondary" onClick={markAllOk}>
-          Mark all OK
-        </Button>
-      )}
-
-      <div className="rounded-xl bg-surface p-4 shadow-surface">
-        <p className="mb-2 text-sm font-semibold text-foreground">Returnable items</p>
-        <div className="flex flex-col gap-4">
-          {returnableItems.map((item) => {
-            const resolved = item.returned_qty !== null;
-            const line = lines[item.component_id];
-            return (
-              <div key={item.component_id} className="flex flex-col gap-2">
-                <p className="text-sm font-medium text-foreground">{item.name}</p>
-                <p className="text-xs text-muted">
-                  {item.location ?? "No location"} · issued {item.issued_qty}
-                </p>
-
-                {resolved ? (
-                  <p className="text-sm text-muted">
-                    Returned {item.returned_qty} · {item.condition}
-                    {item.note ? ` · ${item.note}` : ""}
-                  </p>
-                ) : (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <input
-                      type="number"
-                      min={0}
-                      max={item.issued_qty ?? 0}
-                      value={line?.returnedQty ?? 0}
-                      disabled={notIssued}
-                      onChange={(e) => {
-                        const clamped = Math.min(
-                          Math.max(0, Math.round(Number(e.target.value)) || 0),
-                          item.issued_qty ?? 0,
-                        );
-                        updateLine(item.component_id, { returnedQty: clamped });
-                      }}
-                      className="h-9 w-16 rounded-md border border-field-border bg-field text-center text-sm text-field-foreground"
-                    />
-                    <select
-                      value={line?.condition ?? ""}
-                      disabled={notIssued}
-                      onChange={(e) =>
-                        updateLine(item.component_id, {
-                          condition: (e.target.value || null) as ItemCondition | null,
-                        })
-                      }
-                      className="h-9 rounded-md border border-field-border bg-field px-2 text-sm text-field-foreground"
-                    >
-                      <option value="">Select...</option>
-                      <option value="ok">OK</option>
-                      <option value="damaged">Damaged</option>
-                      <option value="missing">Missing</option>
-                    </select>
-                    <input
-                      type="text"
-                      placeholder="Note (optional)"
-                      value={line?.note ?? ""}
-                      disabled={notIssued}
-                      onChange={(e) => updateLine(item.component_id, { note: e.target.value })}
-                      className="h-9 min-w-0 flex-1 rounded-md border border-field-border bg-field px-2 text-sm text-field-foreground"
-                    />
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {consumedItems.length > 0 && (
-        <div className="rounded-xl bg-surface p-4 shadow-surface">
-          <p className="mb-2 text-sm font-semibold text-foreground">Consumed (non-returnable)</p>
-          <div className="flex flex-col gap-1">
-            {consumedItems.map((item) => (
-              <div key={item.component_id} className="text-sm text-muted">
-                {item.name} × {item.issued_qty}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {notIssued && (
-        <p className="text-sm text-warning">
-          This request is no longer issued (status: {detail.status}).
-        </p>
-      )}
-
-      <div>
+    <DetailShell
+      onClose={onClose}
+      footer={
         <Button
           disabled={notIssued || touchedEntries.length === 0 || verifyMutation.isPending || !isOnline}
           onClick={() => setConfirmOpen(true)}
         >
           {isOnline ? "Verify return" : "Offline"}
         </Button>
-      </div>
+      }
+    >
+      <RequesterHeader
+        name={detail.requester_name}
+        phone={detail.phone}
+        project={detail.project_name ?? "Untitled project"}
+      />
+
+      {notIssued && (
+        <p className="text-sm font-medium text-warning">
+          This request is no longer issued (status: {detail.status}).
+        </p>
+      )}
+
+      <Section
+        title={`Returnable items (${returnableItems.length})`}
+        action={
+          outstanding.length > 1 && !notIssued ? (
+            <Button variant="secondary" onClick={markAllOk}>
+              Mark all OK
+            </Button>
+          ) : undefined
+        }
+      >
+        <div className="flex flex-col divide-y divide-border">
+          {returnableItems.map((item) => {
+            const resolved = item.returned_qty !== null;
+            const line = lines[item.component_id];
+            return (
+              <div key={item.component_id} className="flex flex-col gap-3 py-4 first:pt-0 last:pb-0">
+                <div>
+                  <p className="text-base font-semibold text-foreground">{item.name}</p>
+                  <p className="text-sm text-muted">
+                    {item.location ?? "No location"} · issued {item.issued_qty}
+                  </p>
+                </div>
+
+                {resolved ? (
+                  <p className="text-sm font-medium text-foreground">
+                    Returned {item.returned_qty} · {item.condition}
+                    {item.note ? ` · ${item.note}` : ""}
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap items-end gap-3">
+                    <QtyInput
+                      label="Returned"
+                      value={line?.returnedQty ?? 0}
+                      max={item.issued_qty ?? 0}
+                      disabled={notIssued}
+                      onChange={(n) => updateLine(item.component_id, { returnedQty: n })}
+                    />
+                    <label className="flex flex-col gap-1">
+                      <span className="text-sm font-medium text-muted">Condition</span>
+                      <select
+                        value={line?.condition ?? ""}
+                        disabled={notIssued}
+                        onChange={(e) =>
+                          updateLine(item.component_id, {
+                            condition: (e.target.value || null) as ItemCondition | null,
+                          })
+                        }
+                        className="h-11 rounded-lg border border-field-border bg-field px-3 text-base font-medium text-field-foreground"
+                      >
+                        <option value="">Select...</option>
+                        <option value="ok">OK</option>
+                        <option value="damaged">Damaged</option>
+                        <option value="missing">Missing</option>
+                      </select>
+                    </label>
+                    <label className="flex min-w-40 flex-1 flex-col gap-1">
+                      <span className="text-sm font-medium text-muted">Note (optional)</span>
+                      <input
+                        type="text"
+                        value={line?.note ?? ""}
+                        disabled={notIssued}
+                        onChange={(e) => updateLine(item.component_id, { note: e.target.value })}
+                        className="h-11 min-w-0 rounded-lg border border-field-border bg-field px-3 text-base text-field-foreground"
+                      />
+                    </label>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </Section>
+
+      {consumedItems.length > 0 && (
+        <Section title="Consumed (non-returnable)">
+          <ul className="flex flex-col gap-1.5">
+            {consumedItems.map((item) => (
+              <li key={item.component_id} className="flex justify-between text-base">
+                <span className="text-foreground">{item.name}</span>
+                <span className="font-mono text-muted">× {item.issued_qty}</span>
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
 
       <Modal open={confirmOpen} onClose={() => setConfirmOpen(false)} titleId="confirm-return-title">
-        <h2 id="confirm-return-title" className="text-lg font-semibold text-foreground">
+        <h2 id="confirm-return-title" className="text-xl font-bold text-foreground">
           Confirm return
         </h2>
-        <ul className="flex flex-col gap-1 text-sm text-foreground">
+        <ul className="flex flex-col gap-1 text-base font-medium text-foreground">
           <li>{summary.ok} back in stock</li>
           <li>{summary.damaged} damaged</li>
           <li>{summary.missing} missing</li>
         </ul>
-        <p className="text-xs text-muted">
+        <p className="text-sm text-muted">
           Damaged and missing items are not added back to stock.
         </p>
         <div className="flex justify-end gap-2">

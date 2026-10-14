@@ -14,6 +14,8 @@ interface ModalProps {
   variant?: "card" | "bare";
   /** "md" (default): typical form width. "xl": wide, for data grids/tables. */
   size?: "md" | "xl";
+  /** Pinned below the scrolling body (decision buttons). */
+  footer?: ReactNode;
 }
 
 // Shared modal shell: Escape to close, backdrop click to close, and a tab
@@ -25,6 +27,7 @@ export function Modal({
   titleId,
   variant = "card",
   size = "md",
+  footer,
 }: ModalProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Keeps the keydown handler below reading the latest onClose without
@@ -91,12 +94,21 @@ export function Modal({
         className={
           variant === "bare"
             ? "max-h-[90vh] max-w-full overflow-auto"
-            : `flex max-h-[90vh] w-full flex-col gap-4 overflow-y-auto rounded-t-2xl bg-surface p-5 text-surface-foreground shadow-overlay sm:w-full sm:rounded-2xl ${
-                size === "xl" ? "sm:max-w-3xl" : "sm:max-w-lg"
-              }`
+            : `flex max-h-[90vh] w-full flex-col rounded-t-2xl bg-surface text-surface-foreground shadow-overlay sm:w-full sm:rounded-2xl ${
+                footer ? "overflow-hidden" : "gap-4 overflow-y-auto p-5"
+              } ${size === "xl" ? "sm:max-w-3xl" : "sm:max-w-lg"}`
         }
       >
-        {children}
+        {footer ? (
+          <>
+            <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-5">{children}</div>
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-3 border-t border-border bg-surface px-5 py-3">
+              {footer}
+            </div>
+          </>
+        ) : (
+          children
+        )}
       </div>
     </div>
   );

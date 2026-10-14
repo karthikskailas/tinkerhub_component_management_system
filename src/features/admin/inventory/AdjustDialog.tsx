@@ -55,7 +55,7 @@ export function AdjustDialog({ component, onClose, onAdjusted }: AdjustDialogPro
     <Modal open={!!component} onClose={handleClose} titleId="adjust-dialog-title">
       {component && (
         <>
-          <h2 id="adjust-dialog-title" className="text-lg font-semibold text-foreground">
+          <h2 id="adjust-dialog-title" className="text-xl font-bold text-foreground">
             Adjust {component.name}
           </h2>
           <p className="text-sm text-muted">

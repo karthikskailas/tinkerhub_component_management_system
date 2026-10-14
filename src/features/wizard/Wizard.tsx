@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { SkeletonLines } from "../../components/ui/Skeleton";
 import { Stepper } from "../../components/ui/Stepper";
-import { LAST_REQUEST_ID_KEY, local } from "../../lib/storage";
+import { LAST_CONTACT_KEY, LAST_REQUEST_ID_KEY, local } from "../../lib/storage";
 import { useAuth } from "../auth/useAuth";
 import { useCatalog } from "../catalog/useCatalog";
 import type { CartLine } from "../catalog/ComponentPicker";
@@ -31,7 +31,7 @@ function StepFallback() {
   return <SkeletonLines count={5} />;
 }
 
-const STEP_LABELS = ["Project", "Details", "Components", "Review"];
+const STEP_LABELS = ["Project", "Details", "Components", "Check"];
 
 export function Wizard() {
   const { user, isAnonymous } = useAuth();
@@ -40,6 +40,7 @@ export function Wizard() {
   const location = useLocation();
   const catalogQuery = useCatalog();
 
+  const [detailsPart, setDetailsPart] = useState(1);
   const [resubmitItems, setResubmitItems] = useState<
     ResubmitResult["items"] | null
   >(null);
@@ -101,19 +102,32 @@ export function Wizard() {
 
   function handleSubmitted(requestId: string) {
     local.set(LAST_REQUEST_ID_KEY, requestId);
+    local.set(
+      LAST_CONTACT_KEY,
+      JSON.stringify({ requesterName: draft.requesterName, phone: draft.phone }),
+    );
     clearDraft();
     navigate(`/request/${requestId}`);
   }
 
   return (
     <div className="min-h-dvh bg-transparent sm:py-6">
-      <div className="mx-auto flex w-full max-w-lg flex-col gap-5 p-4 sm:rounded-3xl sm:bg-surface sm:p-6 sm:shadow-surface">
+      <div className="mx-auto flex w-full max-w-lg flex-col gap-5 bg-[color-mix(in_oklch,var(--paper)_85%,transparent)] p-4 sm:rounded-3xl sm:bg-surface sm:p-6 sm:shadow-surface">
+      <p className="text-base font-bold tracking-tight text-foreground">
+        TinkerSpace <span className="text-accent">Maker Cart</span>
+      </p>
       {draft.step === 1 && <OpenRequestBanner />}
 
-      <Stepper step={draft.step} total={4} labels={STEP_LABELS} />
+      <Stepper
+        step={draft.step}
+        total={4}
+        labels={STEP_LABELS}
+        part={draft.step === 2 ? { index: detailsPart, total: 3 } : undefined}
+      />
 
       {draft.step === 1 && draft.path !== "new" && (
         <Step1Path
+          initial={draft.path}
           onChoose={(path) =>
             setDraft((prev) => ({ ...prev, path, step: path === "new" ? 1 : 2 }))
           }
@@ -133,6 +147,7 @@ export function Wizard() {
           <Step2Details
             draft={draft}
             userId={user.id}
+            onPartChange={setDetailsPart}
             onBack={() => goTo(1)}
             onNext={(patch) => setDraft((prev) => ({ ...prev, ...patch, step: 3 }))}
           />

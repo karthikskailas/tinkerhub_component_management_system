@@ -28,7 +28,7 @@ export function CancelApprovalDialog({
 
   return (
     <Modal open={open} onClose={handleClose} titleId="cancel-approval-title">
-      <h2 id="cancel-approval-title" className="text-lg font-semibold text-foreground">
+      <h2 id="cancel-approval-title" className="text-xl font-bold text-foreground">
         Cancel this approval?
       </h2>
       <p className="text-sm text-muted">

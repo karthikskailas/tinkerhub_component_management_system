@@ -6,7 +6,7 @@ import { SkeletonLines } from "../../../components/ui/Skeleton";
 import { toast } from "../../../components/ui/Toast";
 import { parseSupabaseError } from "../../../lib/errors";
 import { useOnlineStatus } from "../../../lib/useOnlineStatus";
-import { DetailShell } from "../requests/DetailShell";
+import { DetailShell, QtyInput, RequesterHeader, Section } from "../requests/DetailShell";
 import { approveRequest, createScreenshotSignedUrl, fetchRequestDetail, rejectRequest } from "./api";
 import type { PickupCardData, RequestDetail } from "./api";
 import { RejectDialog } from "./RejectDialog";
@@ -129,118 +129,97 @@ export function RequestDetailPanel({
   const anyPositive = Object.values(approvedQtys).some((qty) => qty > 0);
 
   return (
-    <DetailShell onClose={onClose}>
-      <h2 className="text-lg font-semibold text-foreground">{detail.requester_name}</h2>
-      <a href={`tel:${detail.phone}`} className="text-sm text-accent hover:underline">
-        {detail.phone}
-      </a>
-      <p className="text-sm text-muted">
-        Submitted {new Date(detail.created_at).toLocaleString()}
-      </p>
+    <DetailShell
+      onClose={onClose}
+      footer={
+        <>
+          <Button
+            variant="danger"
+            disabled={notPendingAnymore || approveMutation.isPending || !isOnline}
+            onClick={() => setRejectOpen(true)}
+          >
+            Reject
+          </Button>
+          <Button
+            disabled={notPendingAnymore || !anyPositive || approveMutation.isPending || !isOnline}
+            loading={approveMutation.isPending}
+            onClick={() => approveMutation.mutate()}
+          >
+            Approve
+          </Button>
+        </>
+      }
+    >
+      <RequesterHeader
+        name={detail.requester_name}
+        phone={detail.phone}
+        project={detail.project_name ?? "Untitled project"}
+        note={`Submitted ${new Date(detail.created_at).toLocaleString()}${
+          detail.project_description ? ` · ${detail.project_description}` : ""
+        }`}
+      />
 
-      <div>
-        <p className="text-sm font-medium text-foreground">
-          {detail.project_name ?? "Untitled project"}
+      {notPendingAnymore && (
+        <p className="text-sm font-medium text-warning">
+          This request is no longer pending (status: {detail.status}). It may have just been
+          handled elsewhere.
         </p>
-        {detail.project_description && (
-          <p className="text-sm text-muted">{detail.project_description}</p>
-        )}
-      </div>
+      )}
+      {!isOnline && (
+        <p className="text-sm font-medium text-warning">
+          You're offline — approve/reject are disabled until you reconnect.
+        </p>
+      )}
 
-      <div className="rounded-xl bg-surface p-4 shadow-surface">
-        <p className="mb-2 text-sm font-semibold text-foreground">Screenshot</p>
-        {screenshotUrl === "loading" && <p className="text-sm text-muted">Loading...</p>}
-        {screenshotUrl === null && (
-          <p className="text-sm text-muted">Screenshot already deleted.</p>
-        )}
-        {typeof screenshotUrl === "string" && (
-          <button type="button" onClick={() => setZoomOpen(true)}>
-            <img
-              src={screenshotUrl}
-              alt="Request screenshot"
-              width={128}
-              height={128}
-              loading="lazy"
-              className="h-32 w-32 rounded-lg object-cover"
-            />
-          </button>
-        )}
-      </div>
-
-      <div className="rounded-xl bg-surface p-4 shadow-surface">
-        <p className="mb-2 text-sm font-semibold text-foreground">Items</p>
-        <div className="flex flex-col gap-3">
+      <Section title={`Items (${detail.items.length})`}>
+        <div className="flex flex-col divide-y divide-border">
           {detail.items.map((item) => {
             const approvedQty = approvedQtys[item.component_id] ?? 0;
             const available = item.count - item.reserved;
             const overAvailable = approvedQty > available;
 
             return (
-              <div key={item.component_id} className="flex flex-col gap-1">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-foreground">{item.name}</p>
-                    <p className="text-xs text-muted">
-                      {item.location ?? "No location"} · requested {item.qty}
-                    </p>
-                  </div>
-                  <label className="shrink-0">
-                    <span className="sr-only">Approved quantity for {item.name}</span>
-                    <input
-                      type="number"
-                      min={0}
-                      max={item.qty}
-                      value={approvedQty}
-                      disabled={notPendingAnymore}
-                      onChange={(e) => {
-                        const clamped = Math.min(
-                          Math.max(0, Math.round(Number(e.target.value)) || 0),
-                          item.qty,
-                        );
-                        setApprovedQtys((prev) => ({ ...prev, [item.component_id]: clamped }));
-                      }}
-                      className="h-9 w-16 rounded-md border border-field-border bg-field text-center text-sm text-field-foreground"
-                    />
-                  </label>
+              <div key={item.component_id} className="flex items-end justify-between gap-3 py-3 first:pt-0 last:pb-0">
+                <div className="min-w-0">
+                  <p className="truncate text-base font-semibold text-foreground">{item.name}</p>
+                  <p className="text-sm text-muted">
+                    {item.location ?? "No location"} · requested {item.qty}
+                  </p>
+                  <p className={`text-sm ${overAvailable ? "font-semibold text-warning" : "text-muted"}`}>
+                    {available} available{overAvailable ? " — exceeds availability" : ""}
+                  </p>
                 </div>
-                <p className={`text-xs ${overAvailable ? "font-medium text-warning" : "text-muted"}`}>
-                  {available} available{overAvailable ? " — exceeds availability" : ""}
-                </p>
+                <QtyInput
+                  label="Approve"
+                  value={approvedQty}
+                  max={item.qty}
+                  disabled={notPendingAnymore}
+                  onChange={(n) => setApprovedQtys((prev) => ({ ...prev, [item.component_id]: n }))}
+                />
               </div>
             );
           })}
         </div>
-      </div>
+      </Section>
 
-      {notPendingAnymore && (
-        <p className="text-sm text-warning">
-          This request is no longer pending (status: {detail.status}). It may have just been
-          handled elsewhere.
-        </p>
-      )}
-
-      {!isOnline && (
-        <p className="text-sm text-warning">
-          You're offline — approve/reject are disabled until you reconnect.
-        </p>
-      )}
-
-      <div className="flex gap-3">
-        <Button
-          variant="danger"
-          disabled={notPendingAnymore || approveMutation.isPending || !isOnline}
-          onClick={() => setRejectOpen(true)}
-        >
-          Reject
-        </Button>
-        <Button
-          disabled={notPendingAnymore || !anyPositive || approveMutation.isPending || !isOnline}
-          loading={approveMutation.isPending}
-          onClick={() => approveMutation.mutate()}
-        >
-          Approve
-        </Button>
-      </div>
+      <Section title="Screenshot">
+        {screenshotUrl === "loading" && <p className="text-sm text-muted">Loading...</p>}
+        {screenshotUrl === null && (
+          <p className="text-sm text-muted">Screenshot already deleted.</p>
+        )}
+        {typeof screenshotUrl === "string" && (
+          <button type="button" onClick={() => setZoomOpen(true)} aria-label="Zoom screenshot">
+            <img
+              src={screenshotUrl}
+              alt="Request screenshot"
+              width={160}
+              height={160}
+              loading="lazy"
+              className="h-40 w-40 rounded-lg object-cover"
+            />
+          </button>
+        )}
+      </Section>
 
       <RejectDialog
         open={rejectOpen}

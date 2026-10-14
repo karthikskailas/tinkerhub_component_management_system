@@ -27,7 +27,7 @@ export function SummaryCard({
       >
         {value}
       </p>
-      <p className="text-xs text-muted">{label}</p>
+      <p className="text-sm text-muted">{label}</p>
     </div>
   );
 }

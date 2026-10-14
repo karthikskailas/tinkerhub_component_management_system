@@ -20,6 +20,7 @@ export function Step3Components({ cart, onCartChange, onBack, onNext }: Step3Pro
   return (
     <div className="motion-list flex flex-col gap-4">
       <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-bold text-foreground focus:outline-none">Select components</h1>
+      <p className="-mt-2 text-sm text-muted">Choose the components you need for your project.</p>
 
       {catalogQuery.isLoading && <SkeletonLines count={6} />}
       {catalogQuery.isError && (

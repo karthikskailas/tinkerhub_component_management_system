@@ -7,12 +7,14 @@ export interface CatalogRow {
   description: string | null;
   returnable: boolean;
   available: number;
+  /** Optional product photo; null when none has been set. */
+  imageUrl: string | null;
 }
 
 async function fetchCatalog(): Promise<CatalogRow[]> {
   const { data, error } = await supabase
     .from("component_catalog")
-    .select("id, name, description, returnable, available")
+    .select("id, name, description, returnable, available, image_url")
     .order("name", { ascending: true });
 
   if (error) throw error;
@@ -25,6 +27,7 @@ async function fetchCatalog(): Promise<CatalogRow[]> {
     description: row.description,
     returnable: row.returnable ?? true,
     available: row.available ?? 0,
+    imageUrl: row.image_url,
   }));
 }
 

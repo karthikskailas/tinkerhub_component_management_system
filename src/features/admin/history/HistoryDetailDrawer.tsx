@@ -47,7 +47,7 @@ export function HistoryDetailDrawer({ requestId, onClose }: HistoryDetailDrawerP
   return (
     <DetailShell onClose={onClose}>
       <p className="font-mono text-sm font-semibold text-accent">{detail.code}</p>
-      <h2 className="text-lg font-semibold text-foreground">{detail.requester_name}</h2>
+      <h2 className="text-xl font-bold text-foreground">{detail.requester_name}</h2>
       <a href={`tel:${detail.phone}`} className="text-sm text-accent hover:underline">
         {detail.phone}
       </a>
@@ -64,14 +64,14 @@ export function HistoryDetailDrawer({ requestId, onClose }: HistoryDetailDrawerP
 
       {/* Screenshots are cleaned up once a request leaves review, so there's
           never anything to show here for a history entry. */}
-      <p className="text-xs text-muted">Screenshot removed after review.</p>
+      <p className="text-sm text-muted">Screenshot removed after review.</p>
 
       <div className="rounded-xl bg-surface p-4 shadow-surface">
         <p className="mb-2 text-sm font-semibold text-foreground">Items</p>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[480px] border-collapse text-sm">
             <thead>
-              <tr className="border-b border-border text-left text-xs font-medium text-muted">
+              <tr className="border-b border-border text-left text-sm font-medium text-muted">
                 <th className="py-2 pr-2">Component</th>
                 <th className="py-2 pr-2">Req.</th>
                 <th className="py-2 pr-2">Appr.</th>
@@ -109,12 +109,12 @@ export function HistoryDetailDrawer({ requestId, onClose }: HistoryDetailDrawerP
                   <span className="text-sm font-medium text-foreground">
                     {event.from_status ?? "—"} → {event.to_status ?? "—"}
                   </span>
-                  <span className="text-xs text-muted">
+                  <span className="text-sm text-muted">
                     {new Date(event.created_at).toLocaleString()}
                   </span>
                 </div>
                 {event.note && <p className="text-sm text-muted">{event.note}</p>}
-                <p className="text-xs text-muted">
+                <p className="text-sm text-muted">
                   {event.actor_display_name ?? (event.actor_id ? event.actor_id.slice(0, 8) : "system")}
                 </p>
               </li>

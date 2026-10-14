@@ -19,18 +19,18 @@ body {
 
 /* ---- Client (student-facing) theme ------------------------------------ */
 html.client-theme {
-  /* Deep enough for white text (5:1) and for accent-coloured links on white. */
-  --accent: oklch(0.5 0.14 155);
-  --accent-foreground: oklch(0.99 0 0);
-  --sticker-lime: oklch(0.92 0.2 125);
-  --sticker-yellow: oklch(0.92 0.17 100);
-  /* Neutrals lean toward the accent hue so surfaces and text read as one family. */
-  --foreground: oklch(0.22 0.02 155);
-  --background: oklch(0.97 0.006 155);
-  /* HeroUI's default muted sits near 4.4:1 on the canvas; this is ~6:1. */
-  --muted: oklch(0.46 0.02 155);
-  --paper: oklch(0.975 0.01 95);
-  --paper-line: oklch(0.9 0.012 95);
+  /* TinkerHub palette (tinkerhub.org): black and white, lime and yellow stickers,
+     purple as the interactive colour. Purple is 5.3:1 against white. */
+  --accent: #5f5ce5;
+  --accent-foreground: #fff;
+  --sticker-lime: #c3ff16;
+  --sticker-yellow: #ffe816;
+  --foreground: #0a0a0a;
+  --background: #f5f5f5;
+  /* #575757 is ~7:1 on white and ~6:1 on the grey canvas. */
+  --muted: #575757;
+  --paper: #fff;
+  --paper-line: #ebebeb;
 }
 
 /* Paper canvas: warm off-white with a faint graph-paper grid, like the
@@ -126,10 +126,10 @@ input[type="number"],
 
 /* Pickup slip: a torn-edge receipt, the shape of the thing you hand over. */
 .slip {
-  --slip: oklch(0.995 0.004 95);
+  --slip: #fff;
   position: relative;
   background: var(--slip);
-  filter: drop-shadow(0 6px 10px oklch(0.2 0.02 155 / 0.18));
+  filter: drop-shadow(0 6px 10px oklch(0.2 0 0 / 0.18));
   transform: rotate(-1.5deg);
 }
 
@@ -146,9 +146,14 @@ input[type="number"],
   background-size: 11px 11px;
 }
 
+/* The slip tilts; the QR stays square to the viewer so it scans easily. */
+.slip-qr {
+  transform: rotate(1.5deg);
+}
+
 .slip-rule {
   border: 0;
-  border-top: 1.5px dashed oklch(0.25 0.02 155 / 0.55);
+  border-top: 1.5px dashed oklch(0.25 0 0 / 0.55);
 }
 
 /* Small coloured labels, like the MAKERS / PROJECTS stickers on the site. */
@@ -157,13 +162,11 @@ input[type="number"],
   flex-shrink: 0;
   border-radius: 0.25rem;
   padding: 0.0625rem 0.375rem;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 800;
   line-height: 1.35;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: black;
-  transform: rotate(-2deg);
+  color: #000;
+  transform: rotate(-1deg);
 }
 .sticker-lime {
   background: var(--sticker-lime, oklch(0.92 0.2 125));
@@ -172,6 +175,6 @@ input[type="number"],
   background: var(--sticker-yellow, oklch(0.92 0.17 100));
 }
 .sticker-muted {
-  background: oklch(0.9 0.005 155);
-  color: oklch(0.38 0.02 155);
+  background: #ebebeb;
+  color: #2e2e2e;
 }

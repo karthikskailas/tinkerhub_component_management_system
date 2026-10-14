@@ -13,7 +13,7 @@ export function PickupCardDialog({ data, onClose }: PickupCardDialogProps) {
       {data && (
         <>
           <div className="mb-3 flex items-center justify-between gap-2">
-            <h2 id="pickup-card-title" className="text-lg font-semibold text-foreground">
+            <h2 id="pickup-card-title" className="text-xl font-bold text-foreground">
               Component pickup card
             </h2>
             <button

@@ -31,7 +31,7 @@ export function RejectDialog({ open, submitting, onClose, onConfirm }: RejectDia
 
   return (
     <Modal open={open} onClose={handleClose} titleId="reject-dialog-title">
-      <h2 id="reject-dialog-title" className="text-lg font-semibold text-foreground">
+      <h2 id="reject-dialog-title" className="text-xl font-bold text-foreground">
         Reject request
       </h2>
 
@@ -41,7 +41,7 @@ export function RejectDialog({ open, submitting, onClose, onConfirm }: RejectDia
             key={pick}
             type="button"
             onClick={() => setReason(pick)}
-            className="rounded-full bg-background px-3 py-1.5 text-xs font-medium text-muted hover:bg-default"
+            className="rounded-full bg-background px-3 py-1.5 text-sm font-medium text-muted hover:bg-default"
           >
             {pick}
           </button>
@@ -60,7 +60,7 @@ export function RejectDialog({ open, submitting, onClose, onConfirm }: RejectDia
           className="min-h-11 w-full rounded-lg border border-field-border bg-field px-3 py-2.5 text-base text-field-foreground outline-none focus:border-field-border-focus"
         />
       </label>
-      <p className="text-xs text-muted">{trimmed.length}/{MAX_LENGTH}</p>
+      <p className="text-sm text-muted">{trimmed.length}/{MAX_LENGTH}</p>
 
       <div className="flex justify-end gap-2">
         <Button variant="secondary" onClick={handleClose} disabled={submitting}>

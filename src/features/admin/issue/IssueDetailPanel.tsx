@@ -7,7 +7,7 @@ import { toast } from "../../../components/ui/Toast";
 import { parseSupabaseError } from "../../../lib/errors";
 import { useOnlineStatus } from "../../../lib/useOnlineStatus";
 import { fetchRequestDetail, issueRequest } from "../requests/api";
-import { DetailShell } from "../requests/DetailShell";
+import { DetailShell, QtyInput, RequesterHeader, Section } from "../requests/DetailShell";
 import { invalidateAfterRequestMutation } from "../requests/invalidate";
 import { fetchPickupCardData } from "../review/api";
 import type { PickupCardData } from "../review/api";
@@ -113,77 +113,71 @@ export function IssueDetailPanel({ requestId, onClose, onIssued }: IssueDetailPa
   );
 
   return (
-    <DetailShell onClose={onClose}>
-      <h2 className="text-lg font-semibold text-foreground">{detail.requester_name}</h2>
-      <a href={`tel:${detail.phone}`} className="text-sm text-accent hover:underline">
-        {detail.phone}
-      </a>
-      <p className="text-sm text-muted">{detail.project_name ?? "Untitled project"}</p>
-
-      <div className="rounded-xl bg-surface p-4 shadow-surface">
-        <p className="mb-2 text-sm font-semibold text-foreground">Items to issue</p>
-        <div className="flex flex-col gap-3">
-          {approvedLines.map((item) => (
-            <div key={item.component_id} className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-foreground">{item.name}</p>
-                <p className="text-xs text-muted">
-                  {item.location ?? "No location"} · approved {item.approved_qty}
-                </p>
-              </div>
-              <input
-                type="number"
-                min={0}
-                max={item.approved_qty ?? 0}
-                value={issuedQtys[item.component_id] ?? 0}
-                disabled={notApproved}
-                onChange={(e) => {
-                  const clamped = Math.min(
-                    Math.max(0, Math.round(Number(e.target.value)) || 0),
-                    item.approved_qty ?? 0,
-                  );
-                  setIssuedQtys((prev) => ({ ...prev, [item.component_id]: clamped }));
-                }}
-                className="h-9 w-16 shrink-0 rounded-md border border-field-border bg-field text-center text-sm text-field-foreground"
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {anyReduced && (
-        <p className="text-sm text-warning">
-          Issuing less than approved releases the remaining reserved stock back to availability.
-        </p>
-      )}
+    <DetailShell
+      onClose={onClose}
+      footer={
+        <>
+          <Button variant="secondary" loading={pickupLoading} onClick={openPickupCard}>
+            View pickup card
+          </Button>
+          <Button
+            disabled={notApproved || approvedLines.length === 0 || issueMutation.isPending || !isOnline}
+            onClick={() => setConfirmOpen(true)}
+          >
+            {isOnline ? "Issue components" : "Offline"}
+          </Button>
+        </>
+      }
+    >
+      <RequesterHeader
+        name={detail.requester_name}
+        phone={detail.phone}
+        project={detail.project_name ?? "Untitled project"}
+      />
 
       {notApproved && (
-        <p className="text-sm text-warning">
+        <p className="text-sm font-medium text-warning">
           This request is no longer approved (status: {detail.status}).
         </p>
       )}
 
-      <div className="flex flex-wrap gap-3">
-        <Button variant="secondary" loading={pickupLoading} onClick={openPickupCard}>
-          View pickup card
-        </Button>
-        <Button
-          disabled={notApproved || approvedLines.length === 0 || issueMutation.isPending || !isOnline}
-          onClick={() => setConfirmOpen(true)}
-        >
-          {isOnline ? "Issue components" : "Offline"}
-        </Button>
-      </div>
+      <Section title={`Items to issue (${approvedLines.length})`}>
+        <div className="flex flex-col divide-y divide-border">
+          {approvedLines.map((item) => (
+            <div key={item.component_id} className="flex items-end justify-between gap-3 py-3 first:pt-0 last:pb-0">
+              <div className="min-w-0">
+                <p className="truncate text-base font-semibold text-foreground">{item.name}</p>
+                <p className="text-sm text-muted">
+                  {item.location ?? "No location"} · approved {item.approved_qty}
+                </p>
+              </div>
+              <QtyInput
+                label="Issue"
+                value={issuedQtys[item.component_id] ?? 0}
+                max={item.approved_qty ?? 0}
+                disabled={notApproved}
+                onChange={(n) => setIssuedQtys((prev) => ({ ...prev, [item.component_id]: n }))}
+              />
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      {anyReduced && (
+        <p className="text-sm font-medium text-warning">
+          Issuing less than approved releases the remaining reserved stock back to availability.
+        </p>
+      )}
 
       <Modal open={confirmOpen} onClose={() => setConfirmOpen(false)} titleId="confirm-issue-title">
-        <h2 id="confirm-issue-title" className="text-lg font-semibold text-foreground">
+        <h2 id="confirm-issue-title" className="text-xl font-bold text-foreground">
           Confirm handover
         </h2>
         <ul className="flex flex-col gap-1.5">
           {approvedLines.map((item) => (
-            <li key={item.component_id} className="flex items-center justify-between text-sm">
-              <span className="text-foreground">{item.name}</span>
-              <span className="text-muted">
+            <li key={item.component_id} className="flex items-center justify-between text-base">
+              <span className="font-medium text-foreground">{item.name}</span>
+              <span className="font-mono text-muted">
                 {issuedQtys[item.component_id] ?? 0} / {item.approved_qty}
               </span>
             </li>
