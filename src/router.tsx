@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useLayoutEffect } from "react";
 import { Route, Routes } from "react-router-dom";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary";
 import { SkeletonLines } from "./components/ui/Skeleton";
@@ -62,7 +62,19 @@ function PageFallback() {
   );
 }
 
+// The TinkerHub look (accent, paper canvas, display type) applies to the
+// student-facing routes only. It is a class on <html> so portals (toasts,
+// dialogs) pick it up too, and it is removed again for /admin.
+function useClientTheme() {
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    root.classList.add("client-theme");
+    return () => root.classList.remove("client-theme");
+  }, []);
+}
+
 function ClientRoutes() {
+  useClientTheme();
   return (
     <Routes>
       <Route path="/" element={<Wizard />} />

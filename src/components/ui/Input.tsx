@@ -14,8 +14,8 @@ function FieldWrapper({ label, error, hint, children }: FieldWrapperProps) {
     <label className="flex flex-col gap-1.5">
       <span className="text-sm font-medium text-foreground">{label}</span>
       {children}
-      {hint && !error && <span className="text-xs text-muted">{hint}</span>}
-      {error && <span className="text-xs text-danger">{error}</span>}
+      {hint && !error && <span className="text-sm text-muted">{hint}</span>}
+      {error && <span className="text-sm text-danger">{error}</span>}
     </label>
   );
 }

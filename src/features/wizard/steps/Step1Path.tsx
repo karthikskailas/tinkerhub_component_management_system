@@ -2,11 +2,14 @@ import type { ProjectPath } from "../types";
 
 export function Step1Path({ onChoose }: { onChoose: (path: ProjectPath) => void }) {
   return (
-    <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold text-foreground">
-        Is your project added on the TinkerHub app?
-      </h1>
-      <p className="text-sm text-muted">This helps us link your request to the right team.</p>
+    <div className="motion-list flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-2xl font-bold text-foreground">
+          Is your project added on the TinkerHub app?
+        </h1>
+        <p className="text-sm text-muted">This helps us link your request to the right team.</p>
+      </div>
+
       <div className="flex flex-col gap-3">
         <button
           type="button"
@@ -25,6 +28,15 @@ export function Step1Path({ onChoose }: { onChoose: (path: ProjectPath) => void 
           <span className="text-sm text-muted">I'll show you how, then add my details.</span>
         </button>
       </div>
+
+      <img
+        src="/design-cup.webp"
+        alt="Illustration of a tea cup lettered “Check in before entering”, with a QR code on the tea bag tag."
+        width={2232}
+        height={2153}
+        decoding="async"
+        className="mx-auto h-44 w-auto object-contain"
+      />
     </div>
   );
 }

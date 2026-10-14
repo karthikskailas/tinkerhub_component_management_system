@@ -9,6 +9,7 @@ export interface RequestDetail {
   publicToken: string;
   status: RequestStatus;
   rejectReason: string | null;
+  expiresAt: string | null;
   projectName: string | null;
   items: { name: string; qty: number; approvedQty: number | null }[];
 }
@@ -16,7 +17,7 @@ export interface RequestDetail {
 async function fetchRequestDetail(id: string): Promise<RequestDetail> {
   const { data: row, error } = await supabase
     .from("requests")
-    .select("id, public_token, status, reject_reason")
+    .select("id, public_token, status, reject_reason, expires_at")
     .eq("id", id)
     .single();
   if (error) throw error;
@@ -28,6 +29,7 @@ async function fetchRequestDetail(id: string): Promise<RequestDetail> {
     publicToken: row.public_token,
     status: row.status,
     rejectReason: row.reject_reason,
+    expiresAt: row.expires_at,
     projectName: byToken.project_name,
     items: (byToken.items ?? []).map((item) => ({
       name: item.name,

@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
+import { Button } from "../../components/ui/Button";
 import { SkeletonLines } from "../../components/ui/Skeleton";
 import { toast } from "../../components/ui/Toast";
 import { parseSupabaseError } from "../../lib/errors";
@@ -49,7 +50,7 @@ export function RequestPage() {
 
   if (query.isLoading) {
     return (
-      <div className="min-h-dvh bg-white sm:bg-background sm:px-4 sm:py-6">
+      <div className="min-h-dvh bg-transparent sm:px-4 sm:py-6">
         <div className="mx-auto w-full max-w-lg p-6 sm:rounded-3xl sm:bg-surface sm:p-8 sm:shadow-surface">
           <SkeletonLines count={5} />
         </div>
@@ -59,16 +60,12 @@ export function RequestPage() {
 
   if (query.isError || !query.data) {
     return (
-      <div className="min-h-dvh bg-white sm:bg-background sm:px-4 sm:py-6">
+      <div className="min-h-dvh bg-transparent sm:px-4 sm:py-6">
         <div className="mx-auto flex w-full max-w-lg flex-col items-center gap-3 p-6 text-center sm:rounded-3xl sm:bg-surface sm:p-8 sm:shadow-surface">
-          <p className="text-sm text-danger">Couldn't load this request.</p>
-          <button
-            type="button"
-            onClick={() => query.refetch()}
-            className="text-sm font-medium text-accent hover:underline"
-          >
+          <p className="text-sm text-danger">We couldn't load this request. Check your connection and retry.</p>
+          <Button variant="secondary" onClick={() => query.refetch()}>
             Retry
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -84,6 +81,7 @@ export function RequestPage() {
       items={request.items}
       code={request.id.slice(0, 8).toUpperCase()}
       publicToken={request.publicToken}
+      expiresAt={request.expiresAt}
       isOwner
       onCancel={() => cancelMutation.mutateAsync()}
       cancelling={cancelMutation.isPending}

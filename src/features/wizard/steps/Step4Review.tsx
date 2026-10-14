@@ -1,9 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Button } from "../../../components/ui/Button";
-import { toast } from "../../../components/ui/Toast";
 import { parseSupabaseError } from "../../../lib/errors";
 import { supabase } from "../../../lib/supabase";
+import { useFocusHeading } from "../../../lib/useFocusHeading";
 import { useOnlineStatus } from "../../../lib/useOnlineStatus";
 import { submitRequest } from "../../requests/api";
 import type { WizardDraft } from "../types";
@@ -18,6 +18,7 @@ interface Step4Props {
 export function Step4Review({ draft, onBack, onEditStep, onSubmitted }: Step4Props) {
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
   const isOnline = useOnlineStatus();
+  const headingRef = useFocusHeading();
 
   useEffect(() => {
     if (!draft.screenshotPath) return;
@@ -58,16 +59,13 @@ export function Step4Review({ draft, onBack, onEditStep, onSubmitted }: Step4Pro
     onSuccess: (row) => {
       onSubmitted(row.id);
     },
-    onError: (error) => {
-      toast.error(parseSupabaseError(error).message);
-    },
   });
 
   const cartLines = Object.values(draft.cart);
 
   return (
-    <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold text-foreground">Review &amp; submit</h1>
+    <div className="motion-list flex flex-col gap-4">
+      <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-bold text-foreground focus:outline-none">Review &amp; submit</h1>
 
       <Section title="Your details" onEdit={() => onEditStep(2)}>
         <p className="text-sm text-foreground">{draft.requesterName}</p>
@@ -89,7 +87,7 @@ export function Step4Review({ draft, onBack, onEditStep, onSubmitted }: Step4Pro
         {signedUrl ? (
           <img
             src={signedUrl}
-            alt="Screenshot"
+            alt="Screenshot of your project page"
             width={96}
             height={96}
             loading="lazy"
@@ -111,6 +109,13 @@ export function Step4Review({ draft, onBack, onEditStep, onSubmitted }: Step4Pro
         </ul>
       </Section>
 
+      {mutation.isError && (
+        <p role="alert" className="rounded-xl bg-danger-soft p-3 text-sm text-danger-soft-foreground">
+          Your request wasn't sent. {parseSupabaseError(mutation.error).message} Your details are
+          saved, so you can try again.
+        </p>
+      )}
+
       <div className="flex gap-3">
         <Button variant="secondary" onClick={onBack} disabled={mutation.isPending} className="shrink-0 rounded-full">
           Back
@@ -121,7 +126,7 @@ export function Step4Review({ draft, onBack, onEditStep, onSubmitted }: Step4Pro
           disabled={!isOnline}
           className="flex-1 rounded-full"
         >
-          {isOnline ? "Submit for review →" : "Offline"}
+          {isOnline ? "Submit for review →" : "Reconnect to submit"}
         </Button>
       </div>
     </div>
@@ -141,7 +146,7 @@ function Section({
     <div className="flex flex-col gap-1.5 rounded-xl bg-surface p-4 shadow-surface">
       <div className="flex items-center justify-between">
         <span className="text-sm font-semibold text-foreground">{title}</span>
-        <button type="button" onClick={onEdit} className="text-xs font-medium text-accent hover:underline">
+        <button type="button" onClick={onEdit} className="inline-flex min-h-11 min-w-11 items-center justify-center text-sm font-medium text-accent hover:underline">
           Edit
         </button>
       </div>

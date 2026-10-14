@@ -12,11 +12,15 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   if (error) {
     return (
       <div className="mx-auto flex min-h-dvh max-w-lg flex-col items-center justify-center gap-3 px-4 text-center">
-        <p className="text-sm text-danger">Couldn't sign you in: {error}</p>
+        <p className="text-sm text-danger">
+          We couldn't start your session. Check your connection and try again.
+        </p>
+        {/* Native button on purpose: importing the HeroUI Button here would pull it
+            into the entry chunk (+37 kB) for a rarely shown error state. */}
         <button
           type="button"
           onClick={retry}
-          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground"
+          className="min-h-11 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground"
         >
           Retry
         </button>

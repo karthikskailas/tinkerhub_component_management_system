@@ -86,7 +86,7 @@ export function Wizard() {
 
   if (!isAnonymous) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-white px-4 text-center">
+      <div className="flex min-h-dvh items-center justify-center bg-surface px-4 text-center">
         <div className="flex flex-col items-center gap-3">
           <p className="text-sm text-muted">You are signed in as staff.</p>
           <Link to="/admin" className="text-sm font-medium text-accent hover:underline">
@@ -106,7 +106,7 @@ export function Wizard() {
   }
 
   return (
-    <div className="min-h-dvh bg-white sm:bg-background sm:py-6">
+    <div className="min-h-dvh bg-transparent sm:py-6">
       <div className="mx-auto flex w-full max-w-lg flex-col gap-5 p-4 sm:rounded-3xl sm:bg-surface sm:p-6 sm:shadow-surface">
       {draft.step === 1 && <OpenRequestBanner />}
 
@@ -121,6 +121,7 @@ export function Wizard() {
       )}
 
       <Suspense fallback={<StepFallback />}>
+        <div key={draft.step}>
         {draft.step === 1 && draft.path === "new" && (
           <GuideStep
             onBack={() => setDraft((prev) => ({ ...prev, path: null }))}
@@ -154,6 +155,7 @@ export function Wizard() {
             onSubmitted={handleSubmitted}
           />
         )}
+        </div>
       </Suspense>
       </div>
     </div>

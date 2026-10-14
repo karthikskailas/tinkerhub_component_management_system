@@ -1,6 +1,5 @@
 import { useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { toast } from "../../components/ui/Toast";
 import { compressToWebp, validateImageFile, ImageValidationError } from "../../lib/image";
 import { supabase } from "../../lib/supabase";
 
@@ -11,6 +10,7 @@ interface ScreenshotUploadProps {
   label?: string;
   labelExtra?: ReactNode;
   helperText?: string;
+  error?: string;
 }
 
 export function ScreenshotUpload({
@@ -20,16 +20,19 @@ export function ScreenshotUpload({
   label = "Payment / registration screenshot",
   labelExtra,
   helperText,
+  error,
 }: ScreenshotUploadProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function handleFile(file: File) {
+    setUploadError(null);
     try {
       validateImageFile(file);
     } catch (err) {
-      toast.error(err instanceof ImageValidationError ? err.message : "Invalid image.");
+      setUploadError(err instanceof ImageValidationError ? err.message : "That file isn't a usable image.");
       return;
     }
 
@@ -49,7 +52,7 @@ export function ScreenshotUpload({
       });
       onChange(objectPath);
     } catch {
-      toast.error("Couldn't upload the screenshot. Please try again.");
+      setUploadError("The screenshot didn't upload. Check your connection and choose it again.");
     } finally {
       setUploading(false);
     }
@@ -68,7 +71,7 @@ export function ScreenshotUpload({
         <span className="text-sm font-medium text-foreground">{label}</span>
         {labelExtra}
       </div>
-      {helperText && <p className="text-xs text-muted">{helperText}</p>}
+      {helperText && <p className="text-sm text-muted">{helperText}</p>}
 
       {path && (
         <div className="flex items-center gap-3 rounded-xl bg-surface p-3 shadow-surface">
@@ -82,7 +85,7 @@ export function ScreenshotUpload({
               className="h-16 w-16 rounded-lg object-cover"
             />
           ) : (
-            <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-default text-xs text-muted">
+            <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-default text-sm text-muted">
               Saved
             </div>
           )}
@@ -90,7 +93,7 @@ export function ScreenshotUpload({
           <button
             type="button"
             onClick={remove}
-            className="text-sm font-medium text-danger hover:underline"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center text-sm font-medium text-danger hover:underline"
           >
             Remove
           </button>
@@ -98,9 +101,9 @@ export function ScreenshotUpload({
       )}
 
       {!path && (
-        <label className="flex min-h-24 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-border bg-surface px-4 py-6 text-center shadow-surface">
+        <label className="flex min-h-24 cursor-pointer focus-within:ring-2 focus-within:ring-accent items-center justify-center rounded-xl border-2 border-dashed border-border bg-surface px-4 py-6 text-center shadow-surface">
           {uploading ? (
-            <span className="text-sm text-muted">Uploading...</span>
+            <span role="status" className="text-sm text-muted">Uploading screenshot...</span>
           ) : (
             <span className="text-sm font-medium text-accent">
               Tap to choose a screenshot
@@ -113,11 +116,16 @@ export function ScreenshotUpload({
                   const file = e.target.files?.[0];
                   if (file) void handleFile(file);
                 }}
-                className="hidden"
+                className="sr-only"
               />
             </span>
           )}
         </label>
+      )}
+      {(uploadError ?? error) && !path && (
+        <p role="alert" className="text-sm text-danger">
+          {uploadError ?? error}
+        </p>
       )}
     </div>
   );

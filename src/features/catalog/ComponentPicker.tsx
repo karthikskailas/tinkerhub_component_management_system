@@ -10,7 +10,7 @@ export interface CartLine {
 }
 
 const MAX_LINES = 50;
-const ROW_HEIGHT = 64;
+const ROW_HEIGHT = 72;
 
 interface ComponentPickerProps {
   items: CatalogRow[];
@@ -20,13 +20,19 @@ interface ComponentPickerProps {
 
 export function ComponentPicker({ items, cart, onChange }: ComponentPickerProps) {
   const [search, setSearch] = useState("");
+  const [view, setView] = useState<"all" | "list">("all");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const filtered = useMemo(() => {
     const needle = search.trim().toLowerCase();
-    if (!needle) return items;
-    return items.filter((item) => item.name.toLowerCase().includes(needle));
-  }, [items, search]);
+    const scoped = view === "list" ? items.filter((item) => cart[item.id]) : items;
+    const matched = needle
+      ? scoped.filter((item) => item.name.toLowerCase().includes(needle))
+      : scoped;
+    // In-stock parts first so out-of-stock rows never bury what you can request.
+    // Array.prototype.sort is stable, so the catalog's name order is kept within each group.
+    return [...matched].sort((a, b) => Number(b.available > 0) - Number(a.available > 0));
+  }, [items, search, view, cart]);
 
   const virtualizer = useVirtualizer({
     count: filtered.length,
@@ -61,9 +67,31 @@ export function ComponentPicker({ items, cart, onChange }: ComponentPickerProps)
 
   return (
     <div className="flex flex-col gap-3">
+      <div className="flex gap-2" role="group" aria-label="Show components">
+        {(
+          [
+            ["all", "All components"],
+            ["list", `Your list (${cartCount})`],
+          ] as const
+        ).map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            aria-pressed={view === key}
+            onClick={() => setView(key)}
+            className={`min-h-11 flex-1 rounded-full px-4 text-sm font-medium transition-colors ${
+              view === key ? "bg-accent text-accent-foreground" : "bg-default text-foreground"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       <input
         type="search"
         inputMode="search"
+        aria-label="Search components"
         placeholder="Search components..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
@@ -71,12 +99,22 @@ export function ComponentPicker({ items, cart, onChange }: ComponentPickerProps)
       />
 
       {atLimit && (
-        <p className="text-sm text-warning">
+        <p role="status" className="text-sm text-warning">
           You've reached the 50-component limit for a single request.
         </p>
       )}
 
-      <div ref={scrollRef} className="h-[min(60vh,480px)] overflow-y-auto rounded-xl bg-surface shadow-surface">
+      {filtered.length === 0 && (
+        <p role="status" className="text-sm text-muted">
+          {search.trim()
+            ? `No components match "${search.trim()}". Try a shorter name.`
+            : view === "list"
+              ? "You haven't picked anything yet. Switch to All components and tap a part to add it."
+              : "No components are available right now."}
+        </p>
+      )}
+
+      <div ref={scrollRef} className="h-[min(60dvh,480px)] min-h-48 overflow-y-auto rounded-xl bg-surface shadow-surface">
         <div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
           {virtualizer.getVirtualItems().map((virtualRow) => {
             const item = filtered[virtualRow.index];
@@ -98,23 +136,27 @@ export function ComponentPicker({ items, cart, onChange }: ComponentPickerProps)
               >
                 <button
                   type="button"
+                  aria-pressed={!!selected}
                   disabled={outOfStock || (atLimit && !selected)}
                   onClick={() => (selected ? deselect(item.id) : select(item))}
-                  className="flex min-h-11 flex-1 items-center justify-between gap-2 rounded-md py-1.5 text-left disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex min-h-11 min-w-0 flex-1 flex-col justify-center rounded-md py-1.5 text-left disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <span className="flex min-w-0 flex-col">
-                    <span className="truncate text-sm font-medium text-foreground">{item.name}</span>
-                    {item.description && (
-                      <span className="truncate text-xs text-muted">{item.description}</span>
+                  <span className="truncate text-sm font-medium text-foreground">{item.name}</span>
+                  <span className="flex min-w-0 items-center gap-2 text-sm text-muted">
+                    {outOfStock ? (
+                      <span className="sticker sticker-muted">Out of stock</span>
+                    ) : item.available <= 3 ? (
+                      <span className="sticker sticker-yellow">Only {item.available} left</span>
+                    ) : (
+                      <span className="sticker sticker-lime">{item.available} in stock</span>
                     )}
-                  </span>
-                  <span className="shrink-0 text-xs font-medium text-muted">
-                    {outOfStock ? "Out of stock" : `${item.available} available`}
+                    {item.description && <span className="truncate">{item.description}</span>}
                   </span>
                 </button>
 
                 {selected && (
                   <QtyStepper
+                    name={item.name}
                     qty={selected.qty}
                     max={selected.available}
                     onChange={(qty) => setQty(item.id, qty)}
@@ -130,38 +172,41 @@ export function ComponentPicker({ items, cart, onChange }: ComponentPickerProps)
 }
 
 function QtyStepper({
+  name,
   qty,
   max,
   onChange,
 }: {
+  name: string;
   qty: number;
   max: number;
   onChange: (qty: number) => void;
 }) {
   return (
-    <div className="flex shrink-0 items-center gap-1">
+    <div className="flex shrink-0 items-center gap-0.5">
       <button
         type="button"
-        aria-label="Decrease quantity"
+        aria-label={`Decrease quantity of ${name}`}
         onClick={() => onChange(qty - 1)}
-        className="flex h-8 w-8 items-center justify-center rounded-md bg-default text-foreground"
+        className="flex h-11 w-11 items-center justify-center rounded-md bg-default text-foreground"
       >
         −
       </button>
       <input
         type="number"
+        aria-label={`Quantity of ${name}`}
         inputMode="numeric"
         min={1}
         max={max}
         value={qty}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="h-8 w-12 rounded-md border border-field-border bg-field text-center text-sm text-field-foreground"
+        className="h-11 w-12 rounded-md border border-field-border bg-field text-center text-sm text-field-foreground"
       />
       <button
         type="button"
-        aria-label="Increase quantity"
+        aria-label={`Increase quantity of ${name}`}
         onClick={() => onChange(qty + 1)}
-        className="flex h-8 w-8 items-center justify-center rounded-md bg-default text-foreground"
+        className="flex h-11 w-11 items-center justify-center rounded-md bg-default text-foreground"
       >
         +
       </button>

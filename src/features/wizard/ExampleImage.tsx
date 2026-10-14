@@ -22,7 +22,7 @@ function ExampleImageModal({ onClose }: { onClose: () => void }) {
       <button
         type="button"
         onClick={onClose}
-        className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-black"
+        className="min-h-11 rounded-lg bg-white px-4 py-2 text-sm font-medium text-black"
       >
         Close
       </button>
@@ -38,7 +38,7 @@ export function ExampleImageTrigger({ children }: { children: ReactNode }) {
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className="text-left">
+      <button type="button" onClick={() => setOpen(true)} className="inline-flex min-h-11 min-w-11 items-center justify-center text-left">
         {children}
       </button>
       {open && <ExampleImageModal onClose={() => setOpen(false)} />}
@@ -62,7 +62,7 @@ export function ExampleImageThumbnail() {
       <div className="hidden rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted">
         Example image not available yet
       </div>
-      <p className="mt-1 text-center text-xs text-muted">Example of a project page</p>
+      <p className="mt-1 text-center text-sm text-muted">Example of a project page</p>
     </ExampleImageTrigger>
   );
 }

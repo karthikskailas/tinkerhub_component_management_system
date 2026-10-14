@@ -1,13 +1,177 @@
 @import "tailwindcss";
 @import "@heroui/styles";
+@import "@fontsource-variable/bricolage-grotesque";
+
+@theme {
+  --font-sans: "Bricolage Grotesque Variable", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+}
 
 :root {
   color-scheme: light;
-  /* Green accent to match the admin dashboard design */
+  /* Staff dashboard keeps the original green. The client look is .client-theme below. */
   --accent: oklch(0.6 0.17 155);
   --accent-foreground: oklch(0.99 0 0);
 }
 
 body {
   margin: 0;
+}
+
+/* ---- Client (student-facing) theme ------------------------------------ */
+html.client-theme {
+  /* Deep enough for white text (5:1) and for accent-coloured links on white. */
+  --accent: oklch(0.5 0.14 155);
+  --accent-foreground: oklch(0.99 0 0);
+  --sticker-lime: oklch(0.92 0.2 125);
+  --sticker-yellow: oklch(0.92 0.17 100);
+  /* Neutrals lean toward the accent hue so surfaces and text read as one family. */
+  --foreground: oklch(0.22 0.02 155);
+  --background: oklch(0.97 0.006 155);
+  /* HeroUI's default muted sits near 4.4:1 on the canvas; this is ~6:1. */
+  --muted: oklch(0.46 0.02 155);
+  --paper: oklch(0.975 0.01 95);
+  --paper-line: oklch(0.9 0.012 95);
+}
+
+/* Paper canvas: warm off-white with a faint graph-paper grid, like the
+   TinkerHub site, so empty space reads as a surface instead of a void. */
+html.client-theme body {
+  font-family: "Bricolage Grotesque Variable", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  line-height: 1.5;
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--paper-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--paper-line) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* Headings carry the voice: balanced lines, tight tracking at display sizes. */
+html.client-theme h1,
+html.client-theme h2 {
+  text-wrap: balance;
+  letter-spacing: -0.015em;
+}
+
+/* Short prose (helper text, status copy) wraps without orphans. */
+html.client-theme p {
+  text-wrap: pretty;
+}
+
+/* Codes and quantities line up and don't jitter as they change. */
+input[type="number"],
+.font-mono {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Motion: routine step changes are quick; the one authored moment is the
+   pickup pass "printing" when a request is approved. Content is visible by
+   default, so a failed animation never hides anything. */
+@keyframes step-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+@keyframes pass-print {
+  from {
+    clip-path: inset(-24px -24px 100% -24px);
+    opacity: 0.6;
+  }
+  to {
+    clip-path: inset(-24px -24px -24px -24px);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Gentle ease-out (no hard expo snap) and a short delay so the new content
+   has finished rendering before the motion starts. */
+/* Each direct child of a .motion-list enters on its own, a beat after the
+   one above it, so a screen assembles piece by piece instead of as one slab. */
+.motion-list > * {
+  animation: step-enter 420ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  animation-delay: calc(var(--n, 0) * 70ms + 40ms);
+}
+.motion-list > :nth-child(1) { --n: 0; }
+.motion-list > :nth-child(2) { --n: 1; }
+.motion-list > :nth-child(3) { --n: 2; }
+.motion-list > :nth-child(4) { --n: 3; }
+.motion-list > :nth-child(5) { --n: 4; }
+.motion-list > :nth-child(6) { --n: 5; }
+.motion-list > :nth-child(7) { --n: 6; }
+.motion-list > :nth-child(n + 8) { --n: 7; }
+/* A list nested in a list animates through its own children, not as a block. */
+.motion-list > .motion-list {
+  animation: none;
+}
+
+.motion-pass {
+  animation: pass-print 1100ms cubic-bezier(0.45, 0, 0.2, 1) 120ms both;
+  will-change: clip-path, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-list > *,
+  .motion-pass {
+    animation: fade-in 250ms ease-out both;
+    will-change: auto;
+  }
+}
+
+/* Pickup slip: a torn-edge receipt, the shape of the thing you hand over. */
+.slip {
+  --slip: oklch(0.995 0.004 95);
+  position: relative;
+  background: var(--slip);
+  filter: drop-shadow(0 6px 10px oklch(0.2 0.02 155 / 0.18));
+  transform: rotate(-1.5deg);
+}
+
+.slip::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% - 1px);
+  height: 8px;
+  background:
+    linear-gradient(-45deg, transparent 5.5px, var(--slip) 0),
+    linear-gradient(45deg, transparent 5.5px, var(--slip) 0);
+  background-size: 11px 11px;
+}
+
+.slip-rule {
+  border: 0;
+  border-top: 1.5px dashed oklch(0.25 0.02 155 / 0.55);
+}
+
+/* Small coloured labels, like the MAKERS / PROJECTS stickers on the site. */
+.sticker {
+  display: inline-block;
+  flex-shrink: 0;
+  border-radius: 0.25rem;
+  padding: 0.0625rem 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  line-height: 1.35;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: black;
+  transform: rotate(-2deg);
+}
+.sticker-lime {
+  background: var(--sticker-lime, oklch(0.92 0.2 125));
+}
+.sticker-yellow {
+  background: var(--sticker-yellow, oklch(0.92 0.17 100));
+}
+.sticker-muted {
+  background: oklch(0.9 0.005 155);
+  color: oklch(0.38 0.02 155);
 }

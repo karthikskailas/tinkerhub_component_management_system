@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "../../../components/ui/Button";
 import { Input, Textarea } from "../../../components/ui/Input";
-import { toast } from "../../../components/ui/Toast";
+import { useFocusHeading } from "../../../lib/useFocusHeading";
 import { isValidIndianMobile } from "../../../lib/phone";
 import { findProjects } from "../../requests/api";
 import { ExampleImageTrigger } from "../ExampleImage";
@@ -44,9 +44,15 @@ export function Step2Details({ draft, userId, onBack, onNext }: Step2Props) {
     },
   });
 
-  const [selectedProjectId, setSelectedProjectId] = useState(draft.selectedProjectId);
+  const [selectedProjectId, setSelectedProjectId] = useState(
+    draft.selectedProjectId,
+  );
   const [switchedToNew, setSwitchedToNew] = useState(false);
   const [screenshotPath, setScreenshotPath] = useState(draft.screenshotPath);
+  // Two short screens inside the one "Details" step: who you are, then the project and its proof.
+  const [shotError, setShotError] = useState(false);
+  const [part, setPart] = useState<"you" | "project">("you");
+  const headingRef = useFocusHeading(part);
 
   const phoneValue = detailsForm.watch("phone");
   const debouncedPhone = useDebounced(phoneValue, 400);
@@ -59,15 +65,20 @@ export function Step2Details({ draft, userId, onBack, onNext }: Step2Props) {
     enabled: showRegisteredPath && phoneReady,
   });
 
-  function submit(details: DetailsFormValues, newProject?: NewProjectFormValues) {
+  function submit(
+    details: DetailsFormValues,
+    newProject?: NewProjectFormValues,
+  ) {
     if (!screenshotPath) {
-      toast.error("Please upload a screenshot before continuing.");
+      setShotError(true);
       return;
     }
 
     if (showRegisteredPath) {
       if (!selectedProjectId) return;
-      const selected = projectsQuery.data?.find((p) => p.id === selectedProjectId);
+      const selected = projectsQuery.data?.find(
+        (p) => p.id === selectedProjectId,
+      );
       onNext({
         path: "registered",
         requesterName: details.requesterName,
@@ -95,118 +106,161 @@ export function Step2Details({ draft, userId, onBack, onNext }: Step2Props) {
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      <h1 className="text-xl font-semibold text-foreground">Your details</h1>
+    <div className="motion-list flex flex-col gap-5">
+      <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-bold text-foreground focus:outline-none">
+        {part === "you" ? "About you" : "Your project"}
+      </h1>
 
-      <div className="flex flex-col gap-4">
-        <Input
-          label="Your name"
-          error={detailsForm.formState.errors.requesterName?.message}
-          {...detailsForm.register("requesterName")}
-        />
-        <Input
-          label="Phone number"
-          type="tel"
-          inputMode="numeric"
-          placeholder="9876543210"
-          error={detailsForm.formState.errors.phone?.message}
-          {...detailsForm.register("phone")}
-        />
-
-        {showRegisteredPath ? (
-          <div className="flex flex-col gap-2">
-            {!phoneReady && (
-              <p className="text-sm text-muted">
-                Enter your 10-digit phone number to look up your project.
-              </p>
-            )}
-            {phoneReady && projectsQuery.isLoading && <p className="text-sm text-muted">Searching...</p>}
-            {phoneReady && projectsQuery.isError && (
-              <p className="text-sm text-danger">Couldn't search right now. Try again.</p>
-            )}
-            {phoneReady && projectsQuery.data && projectsQuery.data.length === 0 && (
-              <div className="flex flex-col gap-2">
-                <p className="text-sm text-muted">No project found for this number.</p>
-                <button
-                  type="button"
-                  onClick={() => setSwitchedToNew(true)}
-                  className="self-start text-sm font-medium text-accent hover:underline"
-                >
-                  Add a new project instead
-                </button>
-              </div>
-            )}
-            {phoneReady && projectsQuery.data && projectsQuery.data.length > 0 && (
-              <div className="flex flex-col gap-2">
-                <span className="text-sm font-medium text-foreground">Select your project</span>
-                {projectsQuery.data.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => setSelectedProjectId(p.id)}
-                    data-selected={p.id === selectedProjectId}
-                    className={`rounded-xl px-4 py-3 text-left text-sm font-medium shadow-surface ${
-                      p.id === selectedProjectId
-                        ? "bg-accent text-accent-foreground"
-                        : "bg-surface text-foreground"
-                    }`}
-                  >
-                    {p.name}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="flex flex-col gap-4">
+      <div className="motion-list flex flex-col gap-4">
+        {part === "you" && (
+          <>
             <Input
-              label="Project name"
-              error={newProjectForm.formState.errors.name?.message}
-              {...newProjectForm.register("name")}
-            />
-            <Textarea
-              label="Project description"
-              rows={3}
-              error={newProjectForm.formState.errors.description?.message}
-              {...newProjectForm.register("description")}
+              label="Your name"
+              error={detailsForm.formState.errors.requesterName?.message}
+              {...detailsForm.register("requesterName")}
             />
             <Input
-              label="Owner name (optional)"
-              {...newProjectForm.register("ownerName")}
+              label="Phone number"
+              type="tel"
+              inputMode="numeric"
+              placeholder="9876543210"
+              error={detailsForm.formState.errors.phone?.message}
+              {...detailsForm.register("phone")}
             />
-          </div>
+          </>
         )}
 
-        <ScreenshotUpload
-          userId={userId}
-          path={screenshotPath}
-          onChange={setScreenshotPath}
-          label="Screenshot of your project page on the TinkerHub app"
-          labelExtra={
-            <ExampleImageTrigger>
-              <span className="text-sm font-medium text-accent hover:underline">See example</span>
-            </ExampleImageTrigger>
-          }
-          helperText="We use this only to verify your project. It is deleted after your request is reviewed."
-        />
+        {part === "project" &&
+          (showRegisteredPath ? (
+            <div className="flex flex-col gap-2">
+              {!phoneReady && (
+                <p className="text-sm text-muted">
+                  Enter the phone number you used on the TinkerHub app and we'll
+                  find your project.
+                </p>
+              )}
+              {phoneReady && projectsQuery.isLoading && (
+                <p role="status" className="text-sm text-muted">Searching...</p>
+              )}
+              {phoneReady && projectsQuery.isError && (
+                <p className="text-sm text-danger">
+                  Couldn't search right now. Try again.
+                </p>
+              )}
+              {phoneReady &&
+                projectsQuery.data &&
+                projectsQuery.data.length === 0 && (
+                  <div className="flex flex-col gap-2">
+                    <p className="text-sm text-muted">
+                      No project is linked to this number. Check the number, or
+                      add your project here.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setSwitchedToNew(true)}
+                      className="inline-flex min-h-11 items-center self-start text-sm font-medium text-accent hover:underline"
+                    >
+                      Add a new project instead
+                    </button>
+                  </div>
+                )}
+              {phoneReady &&
+                projectsQuery.data &&
+                projectsQuery.data.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    <span className="text-sm font-medium text-foreground">
+                      Select your project
+                    </span>
+                    {projectsQuery.data.map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => setSelectedProjectId(p.id)}
+                        aria-pressed={p.id === selectedProjectId}
+                        className={`rounded-xl px-4 py-3 text-left text-sm font-medium shadow-surface ${
+                          p.id === selectedProjectId
+                            ? "bg-accent text-accent-foreground"
+                            : "bg-surface text-foreground"
+                        }`}
+                      >
+                        {p.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              <Input
+                label="Project name"
+                error={newProjectForm.formState.errors.name?.message}
+                {...newProjectForm.register("name")}
+              />
+              <Textarea
+                label="Project description"
+                rows={3}
+                error={newProjectForm.formState.errors.description?.message}
+                {...newProjectForm.register("description")}
+              />
+              <Input
+                label="Project owner (optional, if not you)"
+                {...newProjectForm.register("ownerName")}
+              />
+            </div>
+          ))}
+
+        {part === "project" && (
+          <ScreenshotUpload
+            userId={userId}
+            path={screenshotPath}
+            onChange={(p) => {
+              setScreenshotPath(p);
+              setShotError(false);
+            }}
+            error={shotError ? "Add a screenshot of your project page to continue." : undefined}
+            label="Screenshot of your project page on the TinkerHub app"
+            labelExtra={
+              <ExampleImageTrigger>
+                <span className="text-sm font-medium text-accent hover:underline">
+                  See example
+                </span>
+              </ExampleImageTrigger>
+            }
+            helperText="We use this only to verify your project. It is deleted after your request is reviewed."
+          />
+        )}
       </div>
 
+      {part === "project" && showRegisteredPath && !selectedProjectId && (
+        <p className="text-sm text-muted">Choose your project above to continue.</p>
+      )}
+
       <div className="flex gap-3">
-        <Button variant="secondary" onClick={onBack} className="shrink-0 rounded-full">
+        <Button
+          variant="secondary"
+          onClick={part === "project" ? () => setPart("you") : onBack}
+          className="shrink-0 rounded-full"
+        >
           Back
         </Button>
         <Button
           onClick={
-            showRegisteredPath
-              ? detailsForm.handleSubmit((details) => submit(details))
-              : detailsForm.handleSubmit((details) =>
-                  newProjectForm.handleSubmit((np) => submit(details, np))(),
-                )
+            part === "you"
+              ? async () => {
+                  if (await detailsForm.trigger()) setPart("project");
+                }
+              : showRegisteredPath
+                ? detailsForm.handleSubmit((details) => submit(details))
+                : detailsForm.handleSubmit((details) =>
+                    newProjectForm.handleSubmit((np) => submit(details, np))(),
+                  )
           }
-          disabled={showRegisteredPath && !selectedProjectId}
+          disabled={
+            part === "project" && showRegisteredPath && !selectedProjectId
+          }
           className="flex-1 rounded-full"
         >
-          Next →
+          {part === "you" ? "Continue" : "Next →"}
         </Button>
       </div>
     </div>

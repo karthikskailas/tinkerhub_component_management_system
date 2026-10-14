@@ -1,3 +1,4 @@
+import { useFocusHeading } from "../../../lib/useFocusHeading";
 import { Button } from "../../../components/ui/Button";
 import { ExampleImageThumbnail } from "../ExampleImage";
 import { GUIDE_STEPS, TINKERHUB_URL } from "../guideContent";
@@ -5,10 +6,11 @@ import { GUIDE_STEPS, TINKERHUB_URL } from "../guideContent";
 const CHECKLIST = ["Your project title", "Your project description", "Your name under Collaborators"];
 
 export function GuideStep({ onBack, onContinue }: { onBack: () => void; onContinue: () => void }) {
+  const headingRef = useFocusHeading();
   return (
-    <div className="flex flex-col gap-5">
+    <div className="motion-list flex flex-col gap-5">
       <div className="flex flex-col gap-1.5">
-        <h1 className="text-xl font-semibold text-foreground">
+        <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-bold text-foreground focus:outline-none">
           Add your project on the TinkerHub app first
         </h1>
         <p className="text-sm text-muted">
@@ -30,7 +32,7 @@ export function GuideStep({ onBack, onContinue }: { onBack: () => void; onContin
       <ol className="flex flex-col gap-3">
         {GUIDE_STEPS.map((step, i) => (
           <li key={step.title} className="flex gap-3">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-default text-xs font-semibold text-foreground">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-default text-sm font-semibold text-foreground">
               {i + 1}
             </span>
             <div>
@@ -46,7 +48,7 @@ export function GuideStep({ onBack, onContinue }: { onBack: () => void; onContin
         <ul className="flex flex-col gap-1.5">
           {CHECKLIST.map((item) => (
             <li key={item} className="flex items-center gap-2 text-sm text-muted">
-              <span className="text-success">✓</span>
+              <span aria-hidden className="text-success">✓</span>
               {item}
             </li>
           ))}

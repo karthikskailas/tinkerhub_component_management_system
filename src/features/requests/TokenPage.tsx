@@ -66,7 +66,7 @@ export function TokenPage() {
 
   if (statusQuery.isLoading) {
     return (
-      <div className="min-h-dvh bg-white sm:bg-background sm:px-4 sm:py-6">
+      <div className="min-h-dvh bg-transparent sm:px-4 sm:py-6">
         <div className="mx-auto w-full max-w-lg p-6 sm:rounded-3xl sm:bg-surface sm:p-8 sm:shadow-surface">
           <SkeletonLines count={5} />
         </div>
@@ -76,9 +76,12 @@ export function TokenPage() {
 
   if (statusQuery.isError || !statusQuery.data) {
     return (
-      <div className="min-h-dvh bg-white sm:bg-background sm:px-4 sm:py-6">
+      <div className="min-h-dvh bg-transparent sm:px-4 sm:py-6">
         <div className="mx-auto w-full max-w-lg p-6 text-center sm:rounded-3xl sm:bg-surface sm:p-8 sm:shadow-surface">
-          <p className="text-sm text-danger">Couldn't find a request for this link.</p>
+          <p className="text-sm text-danger">
+            We couldn't find a request for this link. Check that the whole link was copied, or ask
+            the inventory manager.
+          </p>
         </div>
       </div>
     );
