@@ -27,26 +27,37 @@ export function HistoryDrawer({ component, onClose }: HistoryDrawerProps) {
           <h2 id="history-drawer-title" className="text-xl font-bold text-foreground">
             History — {component.name}
           </h2>
-          <p className="text-sm text-muted">Last 50 adjustments.</p>
+          <p className="text-sm text-muted">Count adjustments and edits, newest first.</p>
 
           {query.isLoading && <SkeletonLines count={5} />}
           {query.isError && <p className="text-sm text-danger">Couldn't load history.</p>}
           {query.data && query.data.length === 0 && (
-            <p className="text-sm text-muted">No adjustments yet.</p>
+            <p className="text-sm text-muted">No history yet.</p>
           )}
 
           {query.data && query.data.length > 0 && (
             <ul className="flex flex-col gap-3">
               {query.data.map((entry) => (
-                <li key={entry.id} className="rounded-xl bg-background p-3">
+                <li key={`${entry.kind}-${entry.id}`} className="rounded-xl bg-background p-3">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-sm font-medium text-foreground">
-                      {entry.old_count ?? "—"} → {entry.new_count ?? "—"}
+                      {entry.kind === "edit"
+                        ? "Edited details"
+                        : `${entry.old_count ?? "—"} → ${entry.new_count ?? "—"}`}
                     </span>
                     <span className="text-sm text-muted">
                       {new Date(entry.created_at).toLocaleString()}
                     </span>
                   </div>
+                  {entry.changes && (
+                    <ul className="mt-1 text-sm text-muted">
+                      {Object.entries(entry.changes).map(([field, change]) => (
+                        <li key={field}>
+                          {field}: {String(change.old ?? "—")} → {String(change.new ?? "—")}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                   {entry.reason && <p className="mt-1 text-sm text-muted">{entry.reason}</p>}
                   <p className="mt-1 text-sm text-muted">
                     {entry.source ?? "unknown"} ·{" "}

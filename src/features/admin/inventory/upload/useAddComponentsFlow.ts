@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { commitInventoryChunk, previewInventoryChunk } from "../api";
-import type { CommitRpcResult, UploadRowInput } from "../api";
+import type { CommitRpcResult, ComponentField, UploadRowInput } from "../api";
 import { parseReturnable, validateRows } from "./parse";
 import type { RawRowInput } from "./parse";
 import { mergePreviewResults, toPayload } from "./previewMerge";
@@ -16,6 +16,7 @@ export interface GridRow {
   count: string;
   description: string;
   returnable: boolean;
+  attrs: Record<string, string>;
 }
 
 function emptyRow(): GridRow {
@@ -26,11 +27,18 @@ function emptyRow(): GridRow {
     count: "",
     description: "",
     returnable: true,
+    attrs: {},
   };
 }
 
 function isBlank(row: GridRow): boolean {
-  return !row.name.trim() && !row.location.trim() && !row.count.trim() && !row.description.trim();
+  return (
+    !row.name.trim() &&
+    !row.location.trim() &&
+    !row.count.trim() &&
+    !row.description.trim() &&
+    Object.values(row.attrs).every((v) => !v.trim())
+  );
 }
 
 function toRawRowInput(row: GridRow, rowNumber: number): RawRowInput {
@@ -41,12 +49,15 @@ function toRawRowInput(row: GridRow, rowNumber: number): RawRowInput {
     countRaw: row.count,
     description: row.description,
     returnable: row.returnable,
+    attributes: Object.fromEntries(
+      Object.entries(row.attrs).filter(([, v]) => v.trim() !== ""),
+    ),
   };
 }
 
 export type AddComponentsStep = "grid" | "reviewing" | "review" | "committing" | "done";
 
-export function useAddComponentsFlow() {
+export function useAddComponentsFlow(customFields: ComponentField[] = []) {
   const [step, setStep] = useState<AddComponentsStep>("grid");
   const [gridRows, setGridRows] = useState<GridRow[]>(() =>
     Array.from({ length: EMPTY_ROW_COUNT }, emptyRow),
@@ -93,11 +104,11 @@ export function useAddComponentsFlow() {
     setGridRows((prev) => (prev.length <= 1 ? prev : prev.filter((row) => row.id !== id)));
   }, []);
 
-  // Fills the grid from pasted tab-separated text (name, location, count,
+  // Fills the grid from pasted tab-separated text (name, count, location,
   // description, returnable), dropping a "name" header row if present.
   // Returns how many data rows were filled, for the caller to toast.
   const fillFromPaste = useCallback((text: string): number => {
-    const lines = text.split(/\r\n|\r|\n/).filter((line) => line.length > 0);
+    const lines = text.split(/\r\n|\r|\n/).filter((line) => line.replace(/\t/g, "").trim() !== "");
     if (lines.length === 0) return 0;
 
     let dataLines = lines;
@@ -105,8 +116,8 @@ export function useAddComponentsFlow() {
     if (firstCell === "name") dataLines = lines.slice(1);
 
     const parsedRows: GridRow[] = dataLines.slice(0, MAX_GRID_ROWS).map((line) => {
-      const [name = "", location = "", count = "", description = "", returnableRaw = ""] =
-        line.split("\t");
+      const cells = line.split("\t");
+      const [name = "", count = "", location = "", description = "", returnableRaw = ""] = cells;
       return {
         id: crypto.randomUUID(),
         name,
@@ -114,13 +125,15 @@ export function useAddComponentsFlow() {
         count,
         description,
         returnable: parseReturnable(returnableRaw),
+        // Custom fields follow returnable, in field order.
+        attrs: Object.fromEntries(customFields.map((f, i) => [f.key, cells[5 + i] ?? ""])),
       };
     });
 
     if (parsedRows.length === 0) return 0;
     setGridRows(parsedRows);
     return parsedRows.length;
-  }, []);
+  }, [customFields]);
 
   const review = useCallback(async () => {
     setError(null);

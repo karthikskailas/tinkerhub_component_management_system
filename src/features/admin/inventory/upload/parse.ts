@@ -3,13 +3,21 @@ export const MAX_ROWS = 10_000;
 
 export class ParseError extends Error {}
 
+// The slice of a field definition the parser needs.
+export interface UploadField {
+  key: string;
+  label: string;
+  is_core: boolean;
+}
+
 export interface ParsedRow {
   rowNumber: number; // 1-based, matching the spreadsheet (row 1 = header)
   name: string;
   location: string | null;
   count: number | null; // null when the cell didn't parse as a valid count
   description: string | null;
-  returnable: boolean;
+  returnable: boolean | null; // null = blank/absent: keep the stored value
+  attributes: Record<string, string>; // custom field key -> raw cell text
   clientError: string | null; // set => never sent to the backend
 }
 
@@ -18,11 +26,10 @@ export interface ParseResult {
   ignoredColumns: string[];
 }
 
-const COUNT_HEADER_ALIASES = ["count", "new count", "latest count"];
 const FALSY = new Set(["no", "false", "0"]);
 
 function normalizeHeader(header: string): string {
-  return header.trim().toLowerCase();
+  return header.trim().toLowerCase().replace(/[_\s]+/g, " ");
 }
 
 function cell(value: unknown): string {
@@ -48,7 +55,8 @@ export interface RawRowInput {
   location: string;
   countRaw: string;
   description: string;
-  returnable: boolean;
+  returnable: boolean | null;
+  attributes?: Record<string, string>;
 }
 
 export function validateRows(rawRows: RawRowInput[]): ParsedRow[] {
@@ -67,7 +75,7 @@ export function validateRows(rawRows: RawRowInput[]): ParsedRow[] {
     if (!name) {
       clientError = "name is required";
     } else if (!/^\d+$/.test(countRaw)) {
-      clientError = "count must be a whole number >= 0";
+      clientError = countRaw ? "count must be a whole number >= 0" : "count required";
     } else {
       count = Number(countRaw);
     }
@@ -87,6 +95,7 @@ export function validateRows(rawRows: RawRowInput[]): ParsedRow[] {
       count,
       description,
       returnable: raw.returnable,
+      attributes: raw.attributes ?? {},
       clientError,
     });
   }
@@ -106,42 +115,75 @@ export function validateRows(rawRows: RawRowInput[]): ParsedRow[] {
   return result;
 }
 
-function buildColumnIndex(headers: string[]): {
-  name: number;
-  count: number;
-  location: number;
-  description: number;
-  returnable: number;
-  ignored: string[];
-} {
-  const normalized = headers.map(normalizeHeader);
-  const nameIdx = normalized.indexOf("name");
-  const countIdx = normalized.findIndex((h) => COUNT_HEADER_ALIASES.includes(h));
-  const locationIdx = normalized.indexOf("location");
-  const descriptionIdx = normalized.indexOf("description");
-  const returnableIdx = normalized.indexOf("returnable");
+const BUILTIN_HEADERS: Record<string, string> = {
+  name: "name",
+  count: "count",
+  "new count": "new_count",
+  "latest count": "new_count",
+  location: "location",
+  description: "description",
+  returnable: "returnable",
+};
+
+// Headers resolve by built-in alias first, then by an admin-defined field's
+// label or key (so a renamed core label or a custom field both match).
+function buildColumnIndex(headers: string[], fields: UploadField[]) {
+  const byLabelOrKey = new Map<string, string>();
+  for (const f of fields) {
+    byLabelOrKey.set(normalizeHeader(f.key), f.key);
+    byLabelOrKey.set(normalizeHeader(f.label), f.key);
+  }
+
+  const resolved = headers.map((h) => {
+    const n = normalizeHeader(h);
+    return BUILTIN_HEADERS[n] ?? byLabelOrKey.get(n) ?? null;
+  });
+  const first = (key: string) => resolved.indexOf(key);
+
+  const nameIdx = first("name");
+  const countIdx = first("count");
+  const newCountIdx = first("new_count");
+  const locationIdx = first("location");
+  const descriptionIdx = first("description");
+  const returnableIdx = first("returnable");
 
   const missing: string[] = [];
   if (nameIdx === -1) missing.push("name");
-  if (countIdx === -1) missing.push("count");
+  if (countIdx === -1 && newCountIdx === -1) missing.push("count");
   if (missing.length > 0) {
     throw new ParseError(`Missing required column${missing.length > 1 ? "s" : ""}: ${missing.join(", ")}`);
   }
 
-  const known = new Set([nameIdx, countIdx, locationIdx, descriptionIdx, returnableIdx]);
-  const ignored = headers.filter((_, i) => !known.has(i));
+  const customKeys = new Set(fields.filter((f) => !f.is_core).map((f) => f.key));
+  const custom: { key: string; index: number }[] = [];
+  const ignored: string[] = [];
+  const known = new Set([nameIdx, countIdx, newCountIdx, locationIdx, descriptionIdx, returnableIdx]);
+  headers.forEach((h, i) => {
+    const key = resolved[i];
+    if (key && customKeys.has(key) && !custom.some((c) => c.key === key)) {
+      custom.push({ key, index: i });
+    } else if (!known.has(i) && h.trim() !== "") {
+      ignored.push(h);
+    }
+  });
 
   return {
     name: nameIdx,
     count: countIdx,
+    newCount: newCountIdx,
     location: locationIdx,
     description: descriptionIdx,
     returnable: returnableIdx,
+    custom,
     ignored,
   };
 }
 
-function rowsToParsedRows(dataRows: unknown[][], columns: ReturnType<typeof buildColumnIndex>): ParsedRow[] {
+function rowsToParsedRows(
+  dataRows: unknown[][],
+  columns: ReturnType<typeof buildColumnIndex>,
+  blankCountAsZero: boolean,
+): ParsedRow[] {
   const rawRows: RawRowInput[] = [];
 
   dataRows.forEach((raw, i) => {
@@ -153,9 +195,20 @@ function rowsToParsedRows(dataRows: unknown[][], columns: ReturnType<typeof buil
       rowNumber,
       name: cell(raw[columns.name]),
       location: columns.location >= 0 ? cell(raw[columns.location]) : "",
-      countRaw: cell(raw[columns.count]),
+      countRaw:
+        (columns.newCount >= 0 ? cell(raw[columns.newCount]) : "") ||
+        (columns.count >= 0 ? cell(raw[columns.count]) : "") ||
+        (blankCountAsZero ? "0" : ""),
       description: columns.description >= 0 ? cell(raw[columns.description]) : "",
-      returnable: columns.returnable >= 0 ? parseReturnable(cell(raw[columns.returnable])) : true,
+      returnable:
+        columns.returnable >= 0 && cell(raw[columns.returnable]) !== ""
+          ? parseReturnable(cell(raw[columns.returnable]))
+          : null,
+      attributes: Object.fromEntries(
+        columns.custom
+          .map((c) => [c.key, cell(raw[c.index])] as const)
+          .filter(([, v]) => v !== ""),
+      ),
     });
   });
 
@@ -166,8 +219,13 @@ async function readXlsx(file: File): Promise<unknown[][]> {
   // read-excel-file has no bare/"." export, only subpaths — /browser is the
   // one built for File/Blob input in a browser (vs. /node's fs paths).
   const { default: readXlsxFile } = await import("read-excel-file/browser");
-  // Defaults to the first sheet.
-  return (await readXlsxFile(file)) as unknown as unknown[][];
+  const result = (await readXlsxFile(file)) as unknown;
+  // v9 returns one { sheet, data } per sheet; older versions return the
+  // first sheet's rows directly. Use the first sheet either way.
+  if (Array.isArray(result) && result[0] && !Array.isArray(result[0]) && "data" in result[0]) {
+    return (result[0] as { data: unknown[][] }).data;
+  }
+  return result as unknown[][];
 }
 
 async function readCsv(file: File): Promise<unknown[][]> {
@@ -190,7 +248,11 @@ export function validateFileBasics(file: File): void {
   }
 }
 
-export async function parseSpreadsheetFile(file: File): Promise<ParseResult> {
+export async function parseSpreadsheetFile(
+  file: File,
+  fields: UploadField[] = [],
+  options: { blankCountAsZero?: boolean } = {},
+): Promise<ParseResult> {
   validateFileBasics(file);
 
   const isXlsx = file.name.toLowerCase().endsWith(".xlsx");
@@ -207,8 +269,8 @@ export async function parseSpreadsheetFile(file: File): Promise<ParseResult> {
     throw new ParseError(`That file has more than ${MAX_ROWS.toLocaleString()} rows.`);
   }
 
-  const columns = buildColumnIndex(headers);
-  const rows = rowsToParsedRows(dataRows, columns);
+  const columns = buildColumnIndex(headers, fields);
+  const rows = rowsToParsedRows(dataRows, columns, options.blankCountAsZero ?? false);
 
   return { rows, ignoredColumns: columns.ignored };
 }

@@ -2,7 +2,7 @@
 -- reserved-stock guard, and that missing rows are never deleted.
 begin;
 create extension if not exists pgtap;
-select plan(8);
+select plan(10);
 
 insert into auth.users (id, instance_id, aud, role, email)
 values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin3@test.local');
@@ -69,6 +69,22 @@ select is(
   (select count(*)::int from inventory_adjustments where component_id = (select id from components where name = 'Capacitor 100uF')),
   1,
   'repeating the same upload row does not add a second adjustment (idempotent)'
+);
+
+-- Blank description / returnable cells never erase stored values.
+select commit_inventory_upload(
+  '[{"name":"Capacitor 100uF","location":"Bin F1","count":60,"description":"  ","returnable":null}]'::jsonb,
+  'blank cells'
+);
+select is(
+  (select description from components where name = 'Capacitor 100uF'), 'new desc',
+  'a blank description cell does not erase the stored description'
+);
+select is(
+  (select diff from preview_inventory_upload(
+    '[{"name":"Capacitor 100uF","location":"Bin F1","count":60,"description":""}]'::jsonb)),
+  'unchanged',
+  'blank description + same count previews as unchanged'
 );
 
 select * from finish();

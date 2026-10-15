@@ -3,6 +3,7 @@ import { Button } from "../../../../components/ui/Button";
 import { Input } from "../../../../components/ui/Input";
 import { Modal } from "../../../../components/ui/Modal";
 import { useOnlineStatus } from "../../../../lib/useOnlineStatus";
+import type { ComponentField } from "../api";
 import { PreviewTable } from "./PreviewTable";
 import { downloadInvalidRows, downloadTemplate } from "./template";
 import { ProgressBar, SummaryCard } from "./UploadPrimitives";
@@ -18,15 +19,18 @@ const TABS: { key: UploadDiff; label: string }[] = [
 
 interface UploadDialogProps {
   open: boolean;
+  fields: ComponentField[];
   onClose: () => void;
   onCommitted: () => void;
 }
 
-export function UploadDialog({ open, onClose, onCommitted }: UploadDialogProps) {
-  const flow = useUploadFlow();
+export function UploadDialog({ open, fields, onClose, onCommitted }: UploadDialogProps) {
+  const flow = useUploadFlow(fields);
+  const customLabels = fields.filter((f) => !f.is_core && !f.archived).map((f) => f.label);
   const isOnline = useOnlineStatus();
   const [activeTab, setActiveTab] = useState<UploadDiff>("new");
   const [reason, setReason] = useState("");
+  const [pickedColumns, setPickedColumns] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -71,11 +75,13 @@ export function UploadDialog({ open, onClose, onCommitted }: UploadDialogProps) 
       {flow.step === "choose" && (
         <div className="flex flex-col gap-3">
           <p className="text-sm text-muted">
-            Columns: <code>name</code> and <code>count</code> are required; <code>location</code>,{" "}
-            <code>description</code>, <code>returnable</code> are optional.
+            Columns: <code>name</code> and <code>count</code> (or <code>new count</code>, which wins when both
+            are filled) are required; <code>location</code>, <code>description</code>,{" "}
+            <code>returnable</code> and your own fields are optional. Empty rows are skipped, and blank description or
+            returnable cells keep the stored value.
           </p>
           <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" onClick={downloadTemplate}>
+            <Button variant="secondary" onClick={() => downloadTemplate(customLabels)}>
               Download template
             </Button>
             <Button onClick={() => fileInputRef.current?.click()}>Choose file</Button>
@@ -90,6 +96,14 @@ export function UploadDialog({ open, onClose, onCommitted }: UploadDialogProps) 
               className="hidden"
             />
           </div>
+          <label className="flex items-center gap-2 text-sm text-foreground">
+            <input
+              type="checkbox"
+              checked={flow.blankCountAsZero}
+              onChange={(e) => void flow.setBlankCountAsZero(e.target.checked)}
+            />
+            Treat an empty count as 0
+          </label>
           {flow.parseError && <p className="text-sm text-danger">{flow.parseError}</p>}
         </div>
       )}
@@ -107,11 +121,50 @@ export function UploadDialog({ open, onClose, onCommitted }: UploadDialogProps) 
       {(flow.step === "preview" || flow.step === "committing") && (
         <div className="flex flex-col gap-4">
           {flow.ignoredColumns.length > 0 && (
-            <p className="text-sm text-warning">
-              Ignored columns: {flow.ignoredColumns.join(", ")}
-            </p>
+            <div className="flex flex-col gap-2 rounded-xl bg-background p-3">
+              <p className="text-sm font-medium text-foreground">
+                These columns aren't in your inventory yet. Tick the ones to add as fields:
+              </p>
+              <div className="flex flex-wrap gap-x-4 gap-y-1">
+                {flow.ignoredColumns.map((col) => (
+                  <label key={col} className="flex items-center gap-1.5 text-sm text-foreground">
+                    <input
+                      type="checkbox"
+                      checked={pickedColumns.includes(col)}
+                      onChange={(e) =>
+                        setPickedColumns((prev) =>
+                          e.target.checked ? [...prev, col] : prev.filter((c) => c !== col),
+                        )
+                      }
+                    />
+                    {col}
+                  </label>
+                ))}
+              </div>
+              <Button
+                variant="secondary"
+                className="self-start"
+                disabled={pickedColumns.length === 0 || !isOnline}
+                onClick={() => {
+                  const picked = pickedColumns;
+                  setPickedColumns([]);
+                  void flow.addIgnoredAsFields(picked);
+                }}
+              >
+                Add {pickedColumns.length || ""} selected as fields
+              </Button>
+              <p className="text-xs text-muted">Unticked columns are skipped. Only admins can add fields.</p>
+            </div>
           )}
 
+          <label className="flex items-center gap-2 text-sm text-foreground">
+            <input
+              type="checkbox"
+              checked={flow.blankCountAsZero}
+              onChange={(e) => void flow.setBlankCountAsZero(e.target.checked)}
+            />
+            Treat an empty count as 0
+          </label>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <SummaryCard label="New" value={counts.new} />
             <SummaryCard label="Changed" value={counts.changed} />

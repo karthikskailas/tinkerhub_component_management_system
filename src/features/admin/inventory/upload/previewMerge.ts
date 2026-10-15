@@ -20,6 +20,7 @@ export function matchKey(name: string, location: string | null): string {
 
 export function toPayload(row: ParsedRow): UploadRowInput {
   return {
+    ...row.attributes,
     name: row.name,
     location: row.location,
     count: row.count ?? 0,

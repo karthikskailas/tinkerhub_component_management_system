@@ -1,6 +1,13 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useRef, useState } from "react";
-import { commitInventoryChunk, previewInventoryChunk } from "../api";
-import type { CommitRpcResult, UploadRowInput } from "../api";
+import {
+  commitInventoryChunk,
+  createComponentField,
+  fetchComponentFields,
+  previewInventoryChunk,
+} from "../api";
+import type { CommitRpcResult, ComponentField, UploadRowInput } from "../api";
+import { FIELDS_QUERY_KEY } from "../useComponents";
 import { ParseError, parseSpreadsheetFile } from "./parse";
 import type { ParsedRow } from "./parse";
 import { matchKey, mergePreviewResults, toPayload } from "./previewMerge";
@@ -24,7 +31,13 @@ function chunk<T>(items: T[], size: number): T[][] {
   return chunks;
 }
 
-export function useUploadFlow() {
+export function useUploadFlow(fields: ComponentField[]) {
+  const queryClient = useQueryClient();
+  const fieldsRef = useRef(fields);
+  fieldsRef.current = fields;
+  const fileRef = useRef<File | null>(null);
+  const blankZeroRef = useRef(false);
+  const [blankCountAsZero, setBlankCountAsZeroState] = useState(false);
   const [step, setStep] = useState<UploadStep>("choose");
   const [fileName, setFileName] = useState<string | null>(null);
   const [parseError, setParseError] = useState<string | null>(null);
@@ -73,11 +86,14 @@ export function useUploadFlow() {
   );
 
   const chooseFile = useCallback(
-    async (file: File) => {
+    async (file: File, fieldsOverride?: ComponentField[]) => {
       setParseError(null);
       setFileName(file.name);
+      fileRef.current = file;
       try {
-        const parsed = await parseSpreadsheetFile(file);
+        const parsed = await parseSpreadsheetFile(file, fieldsOverride ?? fieldsRef.current, {
+          blankCountAsZero: blankZeroRef.current,
+        });
         setIgnoredColumns(parsed.ignoredColumns);
 
         const clientInvalidRows: UploadPreviewRow[] = parsed.rows
@@ -106,12 +122,42 @@ export function useUploadFlow() {
 
         await runPreview(clientInvalidRows, validRows);
       } catch (err) {
+        if (!(err instanceof ParseError)) console.error("inventory upload failed", err);
         setParseError(err instanceof ParseError ? err.message : "Couldn't read that file.");
         setStep("choose");
       }
     },
     [runPreview],
   );
+
+  // Re-reads the current file with the "empty count = 0" option flipped.
+  const setBlankCountAsZero = useCallback(
+    async (value: boolean) => {
+      blankZeroRef.current = value;
+      setBlankCountAsZeroState(value);
+      if (fileRef.current) await chooseFile(fileRef.current);
+    },
+    [chooseFile],
+  );
+
+  // Turns the chosen unrecognised headers into text fields (admin only on the
+  // backend), then re-reads the same file so those columns are imported.
+  const addIgnoredAsFields = useCallback(async (headers: string[]) => {
+    const file = fileRef.current;
+    if (!file || headers.length === 0) return;
+    const failures: string[] = [];
+    for (const header of headers) {
+      try {
+        await createComponentField({ label: header, type: "text" });
+      } catch (err) {
+        failures.push(err instanceof Error ? err.message : header);
+      }
+    }
+    const fresh = await fetchComponentFields();
+    void queryClient.invalidateQueries({ queryKey: [FIELDS_QUERY_KEY] });
+    await chooseFile(file, fresh);
+    if (failures.length > 0) setParseError(`Some columns couldn't be added: ${failures[0]}`);
+  }, [chooseFile, queryClient]);
 
   // Returns the fresh rows when a re-preview actually ran, or null when the
   // existing preview was still within the freshness window (caller should
@@ -221,6 +267,9 @@ export function useUploadFlow() {
     commitResult,
     sendableCount,
     chooseFile,
+    addIgnoredAsFields,
+    blankCountAsZero,
+    setBlankCountAsZero,
     commit,
     retryCommit,
     reset,

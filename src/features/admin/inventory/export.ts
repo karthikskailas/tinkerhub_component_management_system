@@ -1,10 +1,9 @@
 import { buildCsv, csvCell, downloadCsv } from "../../../lib/csv";
 import { countComponents, queryComponentsPage } from "./api";
-import type { StockFilter } from "./api";
+import type { ComponentField, StockFilter } from "./api";
 
 const EXPORT_PAGE_SIZE = 1000;
-const EXPORT_SELECT_COLUMNS =
-  "id, name, location, count, description, returnable, reserved, available, updated_at";
+const EXPORT_SELECT_COLUMNS = "*";
 
 export interface ExportRow {
   name: string;
@@ -15,6 +14,7 @@ export interface ExportRow {
   reserved: number;
   available: number;
   updated_at: string;
+  [customField: string]: unknown;
 }
 
 export type ExportScope = "current" | "all";
@@ -23,9 +23,14 @@ export async function countExportRows(params: {
   scope: ExportScope;
   search: string;
   filter: StockFilter;
+  searchKeys?: string[];
 }): Promise<number> {
   if (params.scope === "all") return countComponents({ search: "", filter: "all" });
-  return countComponents({ search: params.search, filter: params.filter });
+  return countComponents({
+    search: params.search,
+    filter: params.filter,
+    searchKeys: params.searchKeys,
+  });
 }
 
 // Pages through the full result set in chunks of 1000, never holding more
@@ -35,6 +40,7 @@ export async function fetchExportRows(params: {
   scope: ExportScope;
   search: string;
   filter: StockFilter;
+  searchKeys?: string[];
   signal: AbortSignal;
   onProgress: (fetched: number, total: number) => void;
 }): Promise<ExportRow[]> {
@@ -53,6 +59,7 @@ export async function fetchExportRows(params: {
         search,
         filter,
         after,
+        searchKeys: params.searchKeys,
         signal: params.signal,
       });
     rows.push(...page.rows);
@@ -64,14 +71,27 @@ export async function fetchExportRows(params: {
   return rows;
 }
 
-export function buildExportCsv(rows: ExportRow[]): string {
-  const header = "name,location,count,description,returnable,reserved,available,updated_at";
+function customCell(value: unknown, field: ComponentField): string {
+  if (value === null || value === undefined) return "";
+  if (field.type === "bool") return value ? "yes" : "no";
+  return String(value);
+}
+
+// Core columns first (same order as the upload template), then custom
+// fields by their label, so an exported file re-uploads as all Unchanged.
+export function buildExportCsv(rows: ExportRow[], fields: ComponentField[] = []): string {
+  const header = [
+    "name,count,location,description,returnable",
+    ...fields.map((f) => csvCell(f.label)),
+    "reserved,available,updated_at",
+  ].join(",");
   const lines = rows.map((row) => [
     csvCell(row.name),
-    csvCell(row.location ?? ""),
     csvCell(String(row.count), true),
+    csvCell(row.location ?? ""),
     csvCell(row.description ?? ""),
     csvCell(row.returnable ? "yes" : "no"),
+    ...fields.map((f) => csvCell(customCell(row[f.key], f))),
     csvCell(String(row.reserved), true),
     csvCell(String(row.available), true),
     csvCell(row.updated_at),
@@ -79,6 +99,6 @@ export function buildExportCsv(rows: ExportRow[]): string {
   return buildCsv(header, lines);
 }
 
-export function downloadExportCsv(rows: ExportRow[]): void {
-  downloadCsv("inventory", buildExportCsv(rows));
+export function downloadExportCsv(rows: ExportRow[], fields: ComponentField[] = []): void {
+  downloadCsv("inventory", buildExportCsv(rows, fields));
 }

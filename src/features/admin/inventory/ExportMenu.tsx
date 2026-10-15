@@ -3,15 +3,17 @@ import { Button } from "../../../components/ui/Button";
 import { toast } from "../../../components/ui/Toast";
 import { downloadExportCsv, fetchExportRows } from "./export";
 import type { ExportScope } from "./export";
-import type { StockFilter } from "./api";
+import type { ComponentField, StockFilter } from "./api";
 import { ProgressBar } from "./upload/UploadPrimitives";
 
 interface ExportMenuProps {
   search: string;
   filter: StockFilter;
+  fields: ComponentField[];
+  searchKeys: string[];
 }
 
-export function ExportMenu({ search, filter }: ExportMenuProps) {
+export function ExportMenu({ search, filter, fields, searchKeys }: ExportMenuProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [progress, setProgress] = useState<{ fetched: number; total: number } | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -37,6 +39,7 @@ export function ExportMenu({ search, filter }: ExportMenuProps) {
         scope,
         search,
         filter,
+        searchKeys,
         signal: controller.signal,
         onProgress: (fetched, total) => setProgress({ fetched, total }),
       });
@@ -44,7 +47,7 @@ export function ExportMenu({ search, filter }: ExportMenuProps) {
       if (rows.length === 0) {
         toast.info("Nothing to export.");
       } else {
-        downloadExportCsv(rows);
+        downloadExportCsv(rows, fields);
       }
     } catch {
       if (!controller.signal.aborted) {

@@ -1,6 +1,6 @@
-const TEMPLATE_CSV = `name,location,count,description,returnable
-Arduino Uno,Shelf A1,10,Microcontroller board,true
-Resistor Pack (1k),Shelf B2,500,Pack of 100,false
+const TEMPLATE_CSV = `name,count,location,description,returnable
+Arduino Uno,10,Shelf A1,Microcontroller board,yes
+Resistor Pack (1k),500,Shelf B2,Pack of 100,no
 `;
 
 function downloadCsv(filename: string, csv: string): void {
@@ -13,8 +13,18 @@ function downloadCsv(filename: string, csv: string): void {
   URL.revokeObjectURL(url);
 }
 
-export function downloadTemplate(): void {
-  downloadCsv("inventory-template.csv", TEMPLATE_CSV);
+export function downloadTemplate(customLabels: string[] = []): void {
+  if (customLabels.length === 0) {
+    downloadCsv("inventory-template.csv", TEMPLATE_CSV);
+    return;
+  }
+  const [header, ...lines] = TEMPLATE_CSV.trimEnd().split("\n");
+  const extra = customLabels.map(csvEscape);
+  const csv = [
+    [header, ...extra].join(","),
+    ...lines.map((l) => [l, ...extra.map(() => "")].join(",")),
+  ].join("\n");
+  downloadCsv("inventory-template.csv", csv + "\n");
 }
 
 function csvEscape(value: string): string {

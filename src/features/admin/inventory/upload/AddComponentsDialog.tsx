@@ -4,20 +4,24 @@ import { Input } from "../../../../components/ui/Input";
 import { Modal } from "../../../../components/ui/Modal";
 import { toast } from "../../../../components/ui/Toast";
 import { useOnlineStatus } from "../../../../lib/useOnlineStatus";
+import type { ComponentField } from "../api";
 import { MAX_GRID_ROWS, useAddComponentsFlow } from "./useAddComponentsFlow";
 import type { GridRow } from "./useAddComponentsFlow";
 import { ProgressBar, SummaryCard } from "./UploadPrimitives";
 
-const COLUMNS = ["name", "location", "count", "description"] as const;
+const COLUMNS = ["name", "count", "location", "description"] as const;
 
 interface AddComponentsDialogProps {
   open: boolean;
+  customFields: ComponentField[];
   onClose: () => void;
   onAdded: () => void;
 }
 
-export function AddComponentsDialog({ open, onClose, onAdded }: AddComponentsDialogProps) {
-  const flow = useAddComponentsFlow();
+export function AddComponentsDialog({ open, customFields, onClose, onAdded }: AddComponentsDialogProps) {
+  const flow = useAddComponentsFlow(customFields);
+  const [showMore, setShowMore] = useState(false);
+  const extras = showMore ? customFields : [];
   const isOnline = useOnlineStatus();
   const [reason, setReason] = useState("Manual add");
   const cellRefs = useRef<Map<string, HTMLInputElement>>(new Map());
@@ -72,27 +76,39 @@ export function AddComponentsDialog({ open, onClose, onAdded }: AddComponentsDia
       {flow.step === "grid" && (
         <div className="flex flex-col gap-3">
           <p className="text-sm text-muted">
-            Paste tab-separated rows (name, location, count, description, returnable) into the
+            Paste tab-separated rows (name, count, location, description, returnable
+            {customFields.length > 0 ? `, ${customFields.map((f) => f.label).join(", ")}` : ""}) into the
             first cell to fill the grid. Max {MAX_GRID_ROWS} rows.
           </p>
 
           <div className="overflow-x-auto rounded-xl bg-background">
-            <table className="w-full table-fixed border-collapse text-sm">
+            <table
+              className="w-full table-fixed border-collapse text-sm"
+              style={{ minWidth: `${640 + extras.length * 160}px` }}
+            >
               <colgroup>
                 <col className="w-[26%]" />
-                <col className="w-[18%]" />
                 <col className="w-[10%]" />
+                <col className="w-[18%]" />
                 <col className="w-[26%]" />
                 <col className="w-[12%]" />
                 <col className="w-[8%]" />
+                {extras.map((f) => (
+                  <col key={f.key} className="w-40" />
+                ))}
               </colgroup>
               <thead>
                 <tr className="border-b border-border text-left text-sm font-medium text-muted">
                   <th className="px-2 py-2">Name</th>
-                  <th className="px-2 py-2">Location</th>
                   <th className="px-2 py-2">Count</th>
+                  <th className="px-2 py-2">Location</th>
                   <th className="px-2 py-2">Description</th>
                   <th className="px-2 py-2">Returnable</th>
+                  {extras.map((f) => (
+                    <th key={f.key} className="px-2 py-2">
+                      {f.label}
+                    </th>
+                  ))}
                   <th />
                 </tr>
               </thead>
@@ -114,7 +130,7 @@ export function AddComponentsDialog({ open, onClose, onAdded }: AddComponentsDia
                             onPaste={rowIndex === 0 && col === "name" ? handlePaste : undefined}
                             type={col === "count" ? "number" : "text"}
                             aria-invalid={!!clientError}
-                            className="min-h-9 w-full rounded-md border border-field-border bg-field px-2 text-sm text-field-foreground outline-none aria-[invalid=true]:border-danger"
+                            className="min-h-9 w-full rounded-md border border-border bg-background px-2 text-sm text-field-foreground outline-none aria-[invalid=true]:border-danger"
                           />
                         </td>
                       ))}
@@ -125,6 +141,19 @@ export function AddComponentsDialog({ open, onClose, onAdded }: AddComponentsDia
                           onChange={(e) => flow.setRow(row.id, { returnable: e.target.checked })}
                         />
                       </td>
+                      {extras.map((f) => (
+                        <td key={f.key} className="p-1">
+                          <input
+                            value={row.attrs[f.key] ?? ""}
+                            onChange={(e) =>
+                              flow.setRow(row.id, { attrs: { ...row.attrs, [f.key]: e.target.value } })
+                            }
+                            maxLength={f.max_length ?? undefined}
+                            aria-label={f.label}
+                            className="min-h-9 w-full rounded-md border border-border bg-background px-2 text-sm text-field-foreground outline-none"
+                          />
+                        </td>
+                      ))}
                       <td className="p-1">
                         <button
                           type="button"
@@ -153,6 +182,11 @@ export function AddComponentsDialog({ open, onClose, onAdded }: AddComponentsDia
             >
               Add row
             </Button>
+            {customFields.length > 0 && (
+              <Button variant="secondary" onClick={() => setShowMore((v) => !v)}>
+                {showMore ? "Fewer fields" : "More fields"}
+              </Button>
+            )}
             <div className="flex gap-2">
               <Button variant="secondary" onClick={handleClose}>
                 Cancel
