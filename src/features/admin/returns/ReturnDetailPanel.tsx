@@ -10,6 +10,7 @@ import { fetchRequestDetail, verifyReturn } from "../requests/api";
 import type { ItemCondition } from "../requests/api";
 import { DetailShell, QtyInput, RequesterHeader, Section } from "../requests/DetailShell";
 import { invalidateAfterRequestMutation } from "../requests/invalidate";
+import { ReturnProof } from "../requests/ReturnProof";
 
 interface LineState {
   returnedQty: number;
@@ -163,6 +164,8 @@ export function ReturnDetailPanel({ requestId, onClose, onVerified }: ReturnDeta
         project={detail.project_name ?? "Untitled project"}
       />
 
+      <ReturnProof detail={detail} canReset={!notIssued} />
+
       {notIssued && (
         <p className="text-sm font-medium text-warning">
           This request is no longer issued (status: {detail.status}).
@@ -216,7 +219,7 @@ export function ReturnDetailPanel({ requestId, onClose, onVerified }: ReturnDeta
                             condition: (e.target.value || null) as ItemCondition | null,
                           })
                         }
-                        className="h-11 rounded-lg border border-field-border bg-field px-3 text-base font-medium text-field-foreground"
+                        className="h-11 rounded-lg border border-border bg-background px-3 text-base font-medium text-field-foreground"
                       >
                         <option value="">Select...</option>
                         <option value="ok">OK</option>
@@ -231,7 +234,7 @@ export function ReturnDetailPanel({ requestId, onClose, onVerified }: ReturnDeta
                         value={line?.note ?? ""}
                         disabled={notIssued}
                         onChange={(e) => updateLine(item.component_id, { note: e.target.value })}
-                        className="h-11 min-w-0 rounded-lg border border-field-border bg-field px-3 text-base text-field-foreground"
+                        className="h-11 min-w-0 rounded-lg border border-border bg-background px-3 text-base text-field-foreground"
                       />
                     </label>
                   </div>

@@ -85,7 +85,7 @@ export function Modal({
       aria-labelledby={titleId}
       data-variant={variant}
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
+      className="fixed left-0 top-0 z-50 flex h-[var(--app-h,100dvh)] w-full items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
     >
       <div
         ref={containerRef}

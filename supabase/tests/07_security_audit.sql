@@ -5,7 +5,7 @@
 -- and every remaining staff-only RPC's E_FORBIDDEN gate).
 begin;
 create extension if not exists pgtap;
-select plan(20);
+select plan(35);
 
 insert into auth.users (id, instance_id, aud, role, email) values
   ('c0000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin-sec@test.local'),
@@ -19,6 +19,8 @@ insert into staff (user_id, role, display_name) values
 
 insert into components (id, name, location, count, reserved) values
   ('d0000000-0000-0000-0000-000000000001', 'Audit Widget', 'Bin Z1', 10, 0);
+
+insert into handover_staff (name, designation) values ('Audit Guard', 'Security');
 
 insert into projects (id, name, phone, created_by) values
   ('e0000000-0000-0000-0000-000000000001', 'Audit Project', '9876500099', 'c0000000-0000-0000-0000-000000000003');
@@ -100,6 +102,15 @@ select throws_like(
   'E_FORBIDDEN%', 'client cannot adjust_component'
 );
 
+select throws_like(
+  $$select update_component('d0000000-0000-0000-0000-000000000001', '{"name":"x"}'::jsonb)$$,
+  'E_FORBIDDEN%', 'client cannot update_component'
+);
+select is(
+  (select count(*)::int from component_edits), 0,
+  'client sees no component_edits rows (staff read only)'
+);
+
 -- ============================================================
 -- storage.objects: own-folder select works, another user's folder doesn't
 -- (19-20). Bucket/object setup runs as the unrestricted session role —
@@ -128,6 +139,68 @@ select is(
   (select count(*)::int from storage.objects where name = 'c0000000-0000-0000-0000-000000000003/own.webp'),
   0,
   'a different client cannot read someone else''s screenshot object'
+);
+
+-- ============================================================
+-- Handover (0015/0016): table, columns, function grants (21-26)
+-- ============================================================
+select is(
+  (select count(*)::int from handover_staff),
+  0,
+  'a client (non-staff) cannot read handover_staff'
+);
+select has_column('public', 'requests', 'handover_confirmed_at', 'requests has handover_confirmed_at');
+select has_column('public', 'requests', 'handed_over_by', 'requests has handed_over_by');
+select is(
+  has_function_privilege('anon', 'public.get_handover_page(text)', 'execute')
+    or has_function_privilege('anon', 'public.confirm_handover(text, uuid, text, text)', 'execute'),
+  false,
+  'anon cannot execute the handover RPCs'
+);
+select is(
+  has_function_privilege('authenticated', 'public.check_rate_limit(text, int, int)', 'execute'),
+  false,
+  'the rate-limit helper is not callable by clients'
+);
+set local role anon;
+select throws_like($$select count(*) from handover_staff$$, 'permission denied%', 'anon cannot read handover_staff');
+reset role;
+
+-- ============================================================
+-- Return submission (0017): columns, grants, bucket policies (27-33)
+-- ============================================================
+select has_column('public', 'requests', 'return_submitted_at', 'requests has return_submitted_at');
+select has_column('public', 'requests', 'return_photo_path', 'requests has return_photo_path');
+select is(
+  has_function_privilege('anon', 'public.submit_return(uuid, text, uuid, text, text, text)', 'execute')
+    or has_function_privilege('anon', 'public.submit_return_by_token(text, text, uuid, text, text, text)', 'execute')
+    or has_function_privilege('anon', 'public.reset_return_submission(uuid, text)', 'execute')
+    or has_function_privilege('anon', 'public.list_handover_staff_public()', 'execute'),
+  false,
+  'anon cannot execute the return-submission RPCs'
+);
+select is(
+  has_function_privilege('authenticated', 'public._submit_return(uuid, text, text, uuid, text, text, text)', 'execute'),
+  false,
+  'the internal _submit_return implementation is not callable by clients'
+);
+select throws_like(
+  $$select reset_return_submission((select id from requests limit 1), 'nope')$$,
+  'E_FORBIDDEN%', 'client cannot reset_return_submission'
+);
+select is(
+  (select count(*)::int from pg_policies
+    where schemaname = 'storage' and tablename = 'objects'
+      and policyname in ('return_photos_insert_own_folder', 'return_photos_select_own_or_staff', 'return_photos_delete_staff')),
+  3,
+  'return-photos has insert/select/delete policies'
+);
+select is(
+  (select count(*)::int from pg_policies
+    where schemaname = 'storage' and tablename = 'objects'
+      and policyname like 'return_photos%' and cmd in ('UPDATE', 'ALL')),
+  0,
+  'return-photos has no client update policy'
 );
 
 select * from finish();

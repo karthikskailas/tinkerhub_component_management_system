@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { relativeTime } from "../../../lib/relativeTime";
 import type { RequestListRow } from "../requests/api";
 
 const AMBER_AFTER_DAYS = 7;
@@ -37,6 +38,20 @@ function ReturnsRowImpl({ row, onOpen }: ReturnsRowProps) {
           </span>
         )}
       </div>
+      {row.return_submitted_at ? (
+        <p className="text-sm font-semibold text-success">
+          Student says returned · {row.return_receiver ?? "unknown receiver"} ·{" "}
+          {new Date(row.return_submitted_at).toLocaleString(undefined, {
+            day: "numeric",
+            month: "short",
+            hour: "numeric",
+            minute: "2-digit",
+          })}{" "}
+          ({relativeTime(row.return_submitted_at)})
+        </p>
+      ) : (
+        <p className="text-xs font-medium text-muted">Not returned yet</p>
+      )}
       <p className="text-sm font-medium text-foreground">{row.requester_name}</p>
       <p className="text-sm text-muted">{row.phone}</p>
       <p className="text-sm text-muted">

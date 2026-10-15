@@ -55,3 +55,29 @@ export const session = {
 export const LAST_REQUEST_ID_KEY = "inv.lastRequestId";
 export const WIZARD_DRAFT_KEY = "inv.wizardDraft";
 export const LAST_CONTACT_KEY = "inv.lastContact";
+
+// Up to 5 of this device's most recent requests: lets /request/:id fall back to
+// the public status link when the anonymous session is gone.
+export const MY_REQUESTS_KEY = "inv.myRequests";
+
+export interface SavedRequest {
+  id: string;
+  token: string;
+  createdAt: string;
+}
+
+export function getSavedRequests(): SavedRequest[] {
+  try {
+    const list = JSON.parse(local.get(MY_REQUESTS_KEY) ?? "[]");
+    return Array.isArray(list)
+      ? list.filter((r) => typeof r?.id === "string" && typeof r?.token === "string").slice(0, 5)
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveRequest(entry: SavedRequest): void {
+  const rest = getSavedRequests().filter((r) => r.id !== entry.id);
+  local.set(MY_REQUESTS_KEY, JSON.stringify([entry, ...rest].slice(0, 5)));
+}

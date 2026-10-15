@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { SkeletonLines } from "../../components/ui/Skeleton";
 import { Stepper } from "../../components/ui/Stepper";
-import { LAST_CONTACT_KEY, LAST_REQUEST_ID_KEY, local } from "../../lib/storage";
+import { LAST_CONTACT_KEY, LAST_REQUEST_ID_KEY, local, saveRequest } from "../../lib/storage";
 import { useAuth } from "../auth/useAuth";
 import { useCatalog } from "../catalog/useCatalog";
 import type { CartLine } from "../catalog/ComponentPicker";
@@ -41,6 +41,9 @@ export function Wizard() {
   const catalogQuery = useCatalog();
 
   const [detailsPart, setDetailsPart] = useState(1);
+  // True while a text field is focused (on-screen keyboard up). The picker step
+  // uses it to drop its header so the list keeps room above the keyboard.
+  const [typing, setTyping] = useState(false);
   const [resubmitItems, setResubmitItems] = useState<
     ResubmitResult["items"] | null
   >(null);
@@ -51,6 +54,7 @@ export function Wizard() {
 
     setDraft(() => ({
       step: 2,
+      hasAdded: true,
       path: "registered",
       requesterName: resubmit.requester_name,
       phone: resubmit.phone,
@@ -100,45 +104,59 @@ export function Wizard() {
 
   const goTo = (step: 1 | 2 | 3 | 4) => setDraft((prev) => ({ ...prev, step }));
 
-  function handleSubmitted(requestId: string) {
+  function handleSubmitted(requestId: string, token: string) {
     local.set(LAST_REQUEST_ID_KEY, requestId);
+    saveRequest({ id: requestId, token, createdAt: new Date().toISOString() });
     local.set(
       LAST_CONTACT_KEY,
       JSON.stringify({ requesterName: draft.requesterName, phone: draft.phone }),
     );
     clearDraft();
-    navigate(`/request/${requestId}`);
+    navigate(`/request/${requestId}`, { state: { justSubmitted: true } });
   }
 
   return (
-    <div className="min-h-dvh bg-transparent sm:py-6">
-      <div className="mx-auto flex w-full max-w-lg flex-col gap-5 bg-[color-mix(in_oklch,var(--paper)_85%,transparent)] p-4 sm:rounded-3xl sm:bg-surface sm:p-6 sm:shadow-surface">
-      <p className="text-base font-bold tracking-tight text-foreground">
+    <div
+      data-typing={draft.step === 3 && typing ? "" : undefined}
+      onFocusCapture={(e) => setTyping(/^(INPUT|TEXTAREA)$/.test((e.target as HTMLElement).tagName))}
+      onBlurCapture={(e) => {
+        const next = e.relatedTarget as HTMLElement | null;
+        if (!next || !/^(INPUT|TEXTAREA)$/.test(next.tagName)) setTyping(false);
+      }}
+      className={`group flex flex-col bg-transparent sm:block sm:py-6 ${
+        // Components + review steps: lock to the screen; only inner lists scroll.
+        draft.step === 3 || draft.step === 4 ? "h-[var(--app-h,100dvh)] sm:h-auto" : "min-h-dvh"
+      }`}
+    >
+      <div className="mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col gap-5 bg-[color-mix(in_oklch,var(--paper)_85%,transparent)] p-4 sm:rounded-3xl sm:bg-surface sm:p-6 sm:shadow-surface">
+      <p className="text-base font-bold tracking-tight text-foreground group-data-[typing]:hidden [[data-kbd]_&]:hidden">
         TinkerSpace <span className="text-accent">Maker Cart</span>
       </p>
       {draft.step === 1 && <OpenRequestBanner />}
 
-      <Stepper
-        step={draft.step}
-        total={4}
-        labels={STEP_LABELS}
-        part={draft.step === 2 ? { index: detailsPart, total: 3 } : undefined}
-      />
+      <div className="group-data-[typing]:hidden [[data-kbd]_&]:hidden">
+        <Stepper
+          step={draft.step}
+          total={4}
+          labels={STEP_LABELS}
+          part={draft.step === 2 ? { index: detailsPart, total: 3 } : undefined}
+        />
+      </div>
 
-      {draft.step === 1 && draft.path !== "new" && (
+      {draft.step === 1 && draft.hasAdded !== false && (
         <Step1Path
-          initial={draft.path}
-          onChoose={(path) =>
-            setDraft((prev) => ({ ...prev, path, step: path === "new" ? 1 : 2 }))
+          initial={draft.hasAdded}
+          onChoose={(added) =>
+            setDraft((prev) => ({ ...prev, hasAdded: added, step: added ? 2 : 1 }))
           }
         />
       )}
 
       <Suspense fallback={<StepFallback />}>
-        <div key={draft.step}>
-        {draft.step === 1 && draft.path === "new" && (
+        <div key={draft.step} className="flex min-h-0 flex-1 flex-col">
+        {draft.step === 1 && draft.hasAdded === false && (
           <GuideStep
-            onBack={() => setDraft((prev) => ({ ...prev, path: null }))}
+            onBack={() => setDraft((prev) => ({ ...prev, hasAdded: null }))}
             onContinue={() => goTo(2)}
           />
         )}

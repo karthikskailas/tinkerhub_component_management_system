@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { Button } from "../../../components/ui/Button";
-import type { ProjectPath } from "../types";
 
-const OPTIONS: { path: ProjectPath; title: string; hint: string }[] = [
-  { path: "registered", title: "Yes, it's added", hint: "I'll look it up using my phone number." },
-  { path: "new", title: "No, I haven't added it", hint: "I'll show you how, then add my details." },
+const OPTIONS: { added: boolean; title: string; hint: string }[] = [
+  { added: true, title: "Yes, I've added it", hint: "I'll enter my details next" },
+  { added: false, title: "No, I haven't added it", hint: "Show me how, then I'll enter my details" },
 ];
 
 function Illustration() {
@@ -28,33 +27,32 @@ export function Step1Path({
   initial,
   onChoose,
 }: {
-  initial: ProjectPath | null;
-  onChoose: (path: ProjectPath) => void;
+  initial: boolean | null;
+  onChoose: (added: boolean) => void;
 }) {
-  const [picked, setPicked] = useState<ProjectPath | null>(initial);
+  const [picked, setPicked] = useState<boolean | null>(initial);
 
   return (
     <div className="motion-list flex flex-col gap-5">
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-bold text-foreground">
-          Is your project already on the TinkerHub app?
+          Have you added your project on the TinkerHub app?
         </h1>
         <p className="text-sm text-muted">
-          The TinkerHub app is where you list your projects, each with its own page. You'll need
-          your phone number and a screenshot of that page.
+          You'll need a screenshot of your project page on the TinkerHub app.
         </p>
       </div>
 
-      <div role="radiogroup" aria-label="Is your project on the TinkerHub app?" className="flex flex-col gap-3">
+      <div role="radiogroup" aria-label="Have you added your project on the TinkerHub app?" className="flex flex-col gap-3">
         {OPTIONS.map((o) => {
-          const on = picked === o.path;
+          const on = picked === o.added;
           return (
             <button
-              key={o.path}
+              key={o.title}
               type="button"
               role="radio"
               aria-checked={on}
-              onClick={() => setPicked(o.path)}
+              onClick={() => setPicked(o.added)}
               className={`flex items-center gap-3 rounded-xl border-2 p-4 text-left transition-colors ${
                 on ? "border-accent bg-surface" : "border-transparent bg-surface shadow-surface"
               }`}
@@ -80,9 +78,9 @@ export function Step1Path({
 
       <div className="flex flex-col items-center gap-2">
         <p role="status" className="text-sm text-muted">
-          {picked ? "Tap Continue when you're ready" : "Select an option to continue"}
+          {picked !== null ? "Tap Continue when you're ready" : "Select an option to continue"}
         </p>
-        <Button fullWidth disabled={!picked} onClick={() => picked && onChoose(picked)} className="rounded-full">
+        <Button fullWidth disabled={picked === null} onClick={() => picked !== null && onChoose(picked)} className="rounded-full">
           Continue →
         </Button>
       </div>

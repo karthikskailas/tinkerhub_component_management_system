@@ -4,6 +4,7 @@ import { OfflineBanner } from "./components/ui/OfflineBanner";
 import { Toaster } from "./components/ui/Toast";
 import { AuthProvider } from "./features/auth/AuthProvider";
 import { useAuth } from "./features/auth/useAuth";
+import { useKeyboardAware } from "./lib/useKeyboardAware";
 import { AppRoutes } from "./router";
 
 function AuthGate({ children }: { children: React.ReactNode }) {
@@ -40,6 +41,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
+  useKeyboardAware();
   return (
     <BrowserRouter>
       <AuthProvider>

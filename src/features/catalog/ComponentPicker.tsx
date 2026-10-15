@@ -1,5 +1,5 @@
-import { useWindowVirtualizer } from "@tanstack/react-virtual";
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { useMemo, useRef, useState } from "react";
 import type { CatalogRow } from "./useCatalog";
 
 export interface CartLine {
@@ -64,14 +64,8 @@ export function ComponentPicker({ items, cart, onChange }: ComponentPickerProps)
   const [search, setSearch] = useState("");
   const [view, setView] = useState<"all" | "list">("all");
   const [inStockOnly, setInStockOnly] = useState(false);
+  // The header (title, tabs, search) stays put; only this list scrolls.
   const listRef = useRef<HTMLDivElement>(null);
-  // Rows scroll with the page (no scroller inside a scroller on phones), so the
-  // virtualizer needs to know where the list starts on the page.
-  const [scrollMargin, setScrollMargin] = useState(0);
-  useLayoutEffect(() => {
-    const top = (listRef.current?.getBoundingClientRect().top ?? 0) + window.scrollY;
-    if (Math.abs(top - scrollMargin) > 1) setScrollMargin(top);
-  });
 
   const filtered = useMemo(() => {
     const needle = search.trim().toLowerCase();
@@ -85,9 +79,9 @@ export function ComponentPicker({ items, cart, onChange }: ComponentPickerProps)
     return [...matched].sort((a, b) => Number(b.available > 0) - Number(a.available > 0));
   }, [items, search, view, inStockOnly, cart]);
 
-  const virtualizer = useWindowVirtualizer({
+  const virtualizer = useVirtualizer({
     count: filtered.length,
-    scrollMargin,
+    getScrollElement: () => listRef.current,
     estimateSize: () => ROW_HEIGHT,
     overscan: 8,
   });
@@ -117,8 +111,8 @@ export function ComponentPicker({ items, cart, onChange }: ComponentPickerProps)
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex gap-2" role="group" aria-label="Show components">
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <div className="flex shrink-0 gap-2 group-data-[typing]:hidden" role="group" aria-label="Show components">
         {(
           [
             ["all", "All components"],
@@ -139,7 +133,7 @@ export function ComponentPicker({ items, cart, onChange }: ComponentPickerProps)
         ))}
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex shrink-0 gap-2">
         <label className="flex min-h-12 min-w-0 flex-1 items-center gap-2 rounded-xl border-2 border-border bg-surface px-3 focus-within:border-accent">
           <span className="text-muted"><Svg d={SEARCH} /></span>
           <input
@@ -183,7 +177,10 @@ export function ComponentPicker({ items, cart, onChange }: ComponentPickerProps)
         </p>
       )}
 
-      <div ref={listRef} className="rounded-xl bg-surface shadow-surface">
+      <div
+        ref={listRef}
+        className="min-h-40 flex-1 overflow-y-auto overscroll-contain rounded-xl bg-surface shadow-surface sm:max-h-[60dvh]"
+      >
         <div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
           {virtualizer.getVirtualItems().map((virtualRow) => {
             const item = filtered[virtualRow.index];
@@ -199,7 +196,7 @@ export function ComponentPicker({ items, cart, onChange }: ComponentPickerProps)
                   left: 0,
                   width: "100%",
                   height: virtualRow.size,
-                  transform: `translateY(${virtualRow.start - scrollMargin}px)`,
+                  transform: `translateY(${virtualRow.start}px)`,
                 }}
                 className="flex items-center gap-2 border-b border-border px-3"
               >

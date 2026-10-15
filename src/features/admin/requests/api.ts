@@ -21,6 +21,12 @@ export interface RequestListRow {
   returned_at: string | null;
   expires_at: string | null;
   updated_at: string;
+  handover_confirmed_at: string | null;
+  handover_confirmed_by: string | null;
+  handed_over_by: string | null;
+  return_submitted_at: string | null;
+  return_receiver: string | null;
+  return_photo: boolean;
 }
 
 export type OrderColumn = "approved_at" | "issued_at" | "updated_at";
@@ -45,7 +51,7 @@ export interface ListPage {
 // `ilike` it without a text cast it has no way to add. Until 0012 is
 // applied, code search (not name/phone search) will 400.
 const LIST_SELECT =
-  "id, request_code, requester_name, phone, status, created_at, approved_at, issued_at, returned_at, expires_at, updated_at, projects(name), request_items(count)";
+  "id, request_code, requester_name, phone, status, created_at, approved_at, issued_at, returned_at, expires_at, updated_at, handover_confirmed_at, handover_confirmed_by, handed_over_by, return_submitted_at, return_receiver_name, return_receiver_designation, return_photo_path, projects(name), request_items(count)";
 
 interface RawListRow {
   id: string;
@@ -59,8 +65,20 @@ interface RawListRow {
   returned_at: string | null;
   expires_at: string | null;
   updated_at: string;
+  handover_confirmed_at: string | null;
+  handover_confirmed_by: string | null;
+  handed_over_by: string | null;
+  return_submitted_at: string | null;
+  return_receiver_name: string | null;
+  return_receiver_designation: string | null;
+  return_photo_path: string | null;
   projects: { name: string } | null;
   request_items: { count: number }[] | null;
+}
+
+export function formatReceiver(name: string | null, designation: string | null): string | null {
+  if (!name) return null;
+  return designation ? `${name} (${designation})` : name;
 }
 
 function mapListRow(row: RawListRow): RequestListRow {
@@ -78,6 +96,12 @@ function mapListRow(row: RawListRow): RequestListRow {
     returned_at: row.returned_at,
     expires_at: row.expires_at,
     updated_at: row.updated_at,
+    handover_confirmed_at: row.handover_confirmed_at,
+    handover_confirmed_by: row.handover_confirmed_by,
+    handed_over_by: row.handed_over_by,
+    return_submitted_at: row.return_submitted_at,
+    return_receiver: formatReceiver(row.return_receiver_name, row.return_receiver_designation),
+    return_photo: !!row.return_photo_path,
   };
 }
 
@@ -107,6 +131,10 @@ export interface FetchListParams {
   /** Inclusive date-range filter on orderColumn (History only), ISO strings. */
   dateFrom?: string | null;
   dateTo?: string | null;
+  /** Issue only: just requests staff have already confirmed on site. */
+  confirmedOnly?: boolean;
+  /** Returns only: requests where the student already submitted a return. */
+  returnSubmittedOnly?: boolean;
   signal?: AbortSignal;
 }
 
@@ -121,6 +149,8 @@ export async function fetchRequestListPage(params: FetchListParams): Promise<Lis
     after,
     dateFrom,
     dateTo,
+    confirmedOnly,
+    returnSubmittedOnly,
     signal,
   } = params;
 
@@ -133,6 +163,8 @@ export async function fetchRequestListPage(params: FetchListParams): Promise<Lis
     .limit(pageSize);
 
   if (signal) query = query.abortSignal(signal);
+  if (confirmedOnly) query = query.not("handover_confirmed_at", "is", null);
+  if (returnSubmittedOnly) query = query.not("return_submitted_at", "is", null);
 
   const term = search.trim();
   if (term) {
@@ -252,6 +284,14 @@ export interface RequestDetail {
   expires_at: string | null;
   reject_reason: string | null;
   project_name: string | null;
+  public_token: string;
+  handover_confirmed_at: string | null;
+  handover_confirmed_by: string | null;
+  handed_over_by: string | null;
+  return_submitted_at: string | null;
+  return_receiver: string | null;
+  return_photo_path: string | null;
+  return_note: string | null;
   items: RequestDetailItem[];
 }
 
@@ -267,6 +307,15 @@ interface RawDetailRow {
   returned_at: string | null;
   expires_at: string | null;
   reject_reason: string | null;
+  public_token: string;
+  handover_confirmed_at: string | null;
+  handover_confirmed_by: string | null;
+  handed_over_by: string | null;
+  return_submitted_at: string | null;
+  return_receiver_name: string | null;
+  return_receiver_designation: string | null;
+  return_photo_path: string | null;
+  return_note: string | null;
   projects: { name: string } | null;
   request_items: {
     component_id: string;
@@ -284,7 +333,7 @@ export async function fetchRequestDetail(id: string): Promise<RequestDetail> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase.from("requests") as any)
     .select(
-      `id, request_code, requester_name, phone, status, created_at, approved_at, issued_at, returned_at, expires_at, reject_reason,
+      `id, request_code, requester_name, phone, status, created_at, approved_at, issued_at, returned_at, expires_at, reject_reason, public_token, handover_confirmed_at, handover_confirmed_by, handed_over_by, return_submitted_at, return_receiver_name, return_receiver_designation, return_photo_path, return_note,
        projects(name),
        request_items(component_id, qty, approved_qty, issued_qty, returned_qty, condition, note, components!request_items_component_id_fkey(name, location, returnable, count, reserved))`,
     )
@@ -307,6 +356,14 @@ export async function fetchRequestDetail(id: string): Promise<RequestDetail> {
     expires_at: row.expires_at,
     reject_reason: row.reject_reason,
     project_name: row.projects?.name ?? null,
+    public_token: row.public_token,
+    handover_confirmed_at: row.handover_confirmed_at,
+    handover_confirmed_by: row.handover_confirmed_by,
+    handed_over_by: row.handed_over_by,
+    return_submitted_at: row.return_submitted_at,
+    return_receiver: formatReceiver(row.return_receiver_name, row.return_receiver_designation),
+    return_photo_path: row.return_photo_path,
+    return_note: row.return_note,
     items: row.request_items.map((item) => ({
       component_id: item.component_id,
       name: item.components?.name ?? "Unknown component",
@@ -374,10 +431,12 @@ export async function fetchRequestEvents(requestId: string): Promise<RequestEven
 export async function issueRequest(
   requestId: string,
   items: { component_id: string; issued_qty: number }[],
+  handedOverBy?: string,
 ): Promise<void> {
   const args = {
     p_request_id: requestId,
     p_items: items,
+    p_handed_over_by: handedOverBy?.trim().slice(0, 80) || undefined,
   } as unknown as Database["public"]["Functions"]["issue_request"]["Args"];
   const { error } = await supabase.rpc("issue_request", args);
   if (error) throw error;
@@ -392,6 +451,14 @@ export async function verifyReturn(
     p_items: items,
   } as unknown as Database["public"]["Functions"]["verify_return"]["Args"];
   const { error } = await supabase.rpc("verify_return", args);
+  if (error) throw error;
+}
+
+export async function resetReturnSubmission(requestId: string, reason: string): Promise<void> {
+  const { error } = await supabase.rpc("reset_return_submission", {
+    p_request_id: requestId,
+    p_reason: reason,
+  });
   if (error) throw error;
 }
 
@@ -411,4 +478,50 @@ export async function findRequestIdByCode(code: string): Promise<string | null> 
     .maybeSingle();
   if (error) return null;
   return data?.id ?? null;
+}
+
+export async function resetHandoverConfirmation(requestId: string, reason: string): Promise<void> {
+  const { error } = await supabase.rpc("reset_handover_confirmation", {
+    p_request_id: requestId,
+    p_reason: reason,
+  });
+  if (error) throw error;
+}
+
+// ============================================================
+// Handover link sharing (IM -> on-site staff)
+// ============================================================
+export function handoverUrl(publicToken: string): string {
+  return `${window.location.origin}/give/${publicToken}`;
+}
+
+// Approved requests with no on-site confirmation get nudged after this long.
+export const HANDOVER_WAIT_WARN_MS = 24 * 60 * 60 * 1000;
+export const HANDOVER_WAIT_URGENT_MS = 5 * 24 * 60 * 60 * 1000;
+
+export function handoverWait(
+  approvedAt: string | null,
+  confirmedAt: string | null,
+): "warn" | "urgent" | null {
+  if (confirmedAt || !approvedAt) return null;
+  const age = Date.now() - new Date(approvedAt).getTime();
+  if (age > HANDOVER_WAIT_URGENT_MS) return "urgent";
+  if (age > HANDOVER_WAIT_WARN_MS) return "warn";
+  return null;
+}
+
+// Resolves whatever a scanner or paste produced: the borrower's QR (a
+// /give/<token> link, or a bare 32-hex token) or the 8-char request code.
+export async function findRequestIdByScan(raw: string): Promise<string | null> {
+  const text = raw.trim();
+  const token = /\/give\/([A-Za-z0-9]+)/.exec(text)?.[1] ?? (/^[a-f0-9]{32}$/i.test(text) ? text : null);
+  if (token) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = await (supabase.from("requests") as any)
+      .select("id")
+      .eq("public_token", token.toLowerCase())
+      .maybeSingle();
+    return data?.id ?? null;
+  }
+  return findRequestIdByCode(text);
 }

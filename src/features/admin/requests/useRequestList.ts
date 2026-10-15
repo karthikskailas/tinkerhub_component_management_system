@@ -22,6 +22,8 @@ export interface UseRequestListParams {
   searchProjects?: boolean;
   dateFrom?: string | null;
   dateTo?: string | null;
+  confirmedOnly?: boolean;
+  returnSubmittedOnly?: boolean;
   /** Issue/Returns: refetch periodically since they have no realtime. */
   refetchIntervalMs?: number;
 }
@@ -35,6 +37,8 @@ export function useRequestList(params: UseRequestListParams) {
     debouncedSearch,
     params.dateFrom ?? null,
     params.dateTo ?? null,
+    params.confirmedOnly ?? false,
+    params.returnSubmittedOnly ?? false,
   ];
 
   const query = useInfiniteQuery({
@@ -50,6 +54,8 @@ export function useRequestList(params: UseRequestListParams) {
         after: pageParam,
         dateFrom: params.dateFrom,
         dateTo: params.dateTo,
+        confirmedOnly: params.confirmedOnly,
+        returnSubmittedOnly: params.returnSubmittedOnly,
       }),
     initialPageParam: null as ListCursor | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor,

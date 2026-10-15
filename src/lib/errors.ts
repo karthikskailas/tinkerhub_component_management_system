@@ -18,6 +18,13 @@ const FRIENDLY: Record<string, string> = {
   E_FORBIDDEN: "You don't have permission to do that.",
   E_INVALID_STATUS: "This request is no longer in a state that allows that action.",
   E_EXPIRED: "This approval has expired.",
+  E_ALREADY_CONFIRMED: "This handover was already confirmed.",
+  E_DUPLICATE: "That name is already on the list.",
+  E_IN_USE:
+    "This component appears in requests, so it can't be deleted. Set its count to 0 instead.",
+  E_RETURNABLE_OUTSTANDING:
+    "Can't mark this non-returnable while units are issued and not yet returned.",
+  E_ALREADY_SUBMITTED: "A return was already submitted for this request.",
 };
 
 const DEFAULT_MESSAGE = "Something went wrong. Please try again.";

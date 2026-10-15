@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { LAST_REQUEST_ID_KEY, local } from "../../lib/storage";
+import { getSavedRequests, LAST_REQUEST_ID_KEY, local } from "../../lib/storage";
 import { supabase } from "../../lib/supabase";
 
 const OPEN_STATUSES = new Set(["pending", "approved", "issued"]);
@@ -16,7 +16,8 @@ async function fetchStatus(id: string) {
 }
 
 export function OpenRequestBanner() {
-  const requestId = local.get(LAST_REQUEST_ID_KEY);
+  // Most recent request saved on this device (falls back to the legacy single id).
+  const requestId = getSavedRequests()[0]?.id ?? local.get(LAST_REQUEST_ID_KEY);
 
   const query = useQuery({
     queryKey: ["open_request_check", requestId],

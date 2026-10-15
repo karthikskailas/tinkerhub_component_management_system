@@ -14,6 +14,11 @@ export interface HistoryExportRow {
   status: RequestStatus;
   issued_at: string | null;
   returned_at: string | null;
+  handed_over_by: string | null;
+  handover_confirmed_at: string | null;
+  return_receiver: string | null;
+  return_submitted_at: string | null;
+  return_photo: boolean;
   item_count: number;
   items: string; // "Name x qty; Name x qty"
 }
@@ -97,6 +102,11 @@ export async function fetchHistoryExportRows(params: {
         status: row.status,
         issued_at: row.issued_at,
         returned_at: row.returned_at,
+        handed_over_by: row.handed_over_by,
+        handover_confirmed_at: row.handover_confirmed_at,
+        return_receiver: row.return_receiver,
+        return_submitted_at: row.return_submitted_at,
+        return_photo: row.return_photo,
         item_count: row.item_count,
         items: itemsByRequest.get(row.id) ?? "",
       });
@@ -111,7 +121,7 @@ export async function fetchHistoryExportRows(params: {
 }
 
 export function buildHistoryExportCsv(rows: HistoryExportRow[]): string {
-  const header = "code,requester,phone,project,status,issued_at,returned_at,item_count,items";
+  const header = "code,requester,phone,project,status,issued_at,returned_at,handed_over_by,handover_confirmed_at,returned_to_as_reported,return_submitted_at,return_photo,item_count,items";
   const lines = rows.map((row) => [
     csvCell(row.code),
     csvCell(row.requester_name),
@@ -120,6 +130,11 @@ export function buildHistoryExportCsv(rows: HistoryExportRow[]): string {
     csvCell(row.status),
     csvCell(row.issued_at ?? ""),
     csvCell(row.returned_at ?? ""),
+    csvCell(row.handed_over_by ?? ""),
+    csvCell(row.handover_confirmed_at ?? ""),
+    csvCell(row.return_receiver ?? ""),
+    csvCell(row.return_submitted_at ?? ""),
+    csvCell(row.return_photo ? "yes" : "no"),
     csvCell(String(row.item_count), true),
     csvCell(row.items),
   ]);

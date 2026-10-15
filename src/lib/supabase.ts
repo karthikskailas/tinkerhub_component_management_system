@@ -34,6 +34,38 @@ function timeoutFetch(input: RequestInfo | URL, init: RequestInit = {}): Promise
   return fetch(input, { ...init, signal: controller.signal }).finally(() => clearTimeout(timeoutId));
 }
 
+// Blocked or full storage must never crash the app: reads fall back to "no
+// session" and writes are dropped.
+const safeStorage = {
+  getItem: (key: string) => {
+    try {
+      return window.localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  },
+  setItem: (key: string, value: string) => {
+    try {
+      window.localStorage.setItem(key, value);
+    } catch {
+      // ignore
+    }
+  },
+  removeItem: (key: string) => {
+    try {
+      window.localStorage.removeItem(key);
+    } catch {
+      // ignore
+    }
+  },
+};
+
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   global: { fetch: timeoutFetch },
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: false,
+    storage: safeStorage,
+  },
 });

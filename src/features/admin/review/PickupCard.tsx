@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "../../../components/ui/Button";
 import { toast } from "../../../components/ui/Toast";
 import { buildWhatsAppUrl } from "../../../lib/whatsapp";
+import { handoverUrl } from "../requests/api";
+import { ShareHandoverButtons } from "../requests/ShareHandover";
 import type { PickupCardData } from "./api";
 
 const CARD_WIDTH = 600;
@@ -28,17 +30,17 @@ export function PickupCard({ data }: { data: PickupCardData }) {
 
   useEffect(() => {
     let active = true;
-    // Encodes only the request code — never the phone number or any other
-    // personal data — so the QR is safe to hand over on a printed/shown card.
+    // Same URL as the borrower's own page: only the secret token, never the
+    // phone number or any other personal data.
     import("qrcode").then(({ default: QRCode }) =>
-      QRCode.toDataURL(data.short_code, { width: QR_SIZE, margin: 1 }).then((url) => {
+      QRCode.toDataURL(handoverUrl(data.public_token), { width: QR_SIZE * 2, margin: 2 }).then((url) => {
         if (active) setQrDataUrl(url);
       }),
     );
     return () => {
       active = false;
     };
-  }, [data.short_code]);
+  }, [data.public_token]);
 
   async function handleDownload() {
     setDownloading(true);
@@ -80,6 +82,12 @@ export function PickupCard({ data }: { data: PickupCardData }) {
     } finally {
       setSharing(false);
     }
+  }
+
+  async function getCardImage(): Promise<File | null> {
+    const { toBlob } = await import("html-to-image");
+    const blob = await toBlob(cardRef.current!, { pixelRatio: 2, width: CARD_WIDTH });
+    return blob ? new File([blob], `pickup-${data.short_code}.png`, { type: "image/png" }) : null;
   }
 
   async function handleCopyText() {
@@ -162,6 +170,19 @@ export function PickupCard({ data }: { data: PickupCardData }) {
         <Button variant="ghost" onClick={handleCopyText}>
           Copy text
         </Button>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <ShareHandoverButtons
+          getImage={getCardImage}
+          data={{
+            code: data.short_code,
+            requesterName: data.requester_name,
+            projectName: data.project_name,
+            items: data.items.map((i) => ({ name: i.name, location: i.location, qty: i.approved_qty })),
+            expiresAt: data.expires_at,
+            publicToken: data.public_token,
+          }}
+        />
       </div>
     </div>
   );

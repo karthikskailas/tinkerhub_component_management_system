@@ -13,6 +13,7 @@ export function ReturnsPage() {
   const { id } = useParams<{ id?: string }>();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  const [submittedOnly, setSubmittedOnly] = useState(false);
 
   const list = useRequestList({
     queryKeyPrefix: "returns_requests",
@@ -21,6 +22,7 @@ export function ReturnsPage() {
     ascending: true,
     pageSize: PAGE_SIZE,
     search,
+    returnSubmittedOnly: submittedOnly,
     refetchIntervalMs: REFETCH_INTERVAL_MS,
   });
 
@@ -42,6 +44,18 @@ export function ReturnsPage() {
           search={search}
           onSearchChange={setSearch}
           searchPlaceholder="Search by code, name or phone..."
+          filters={
+            <button
+              type="button"
+              aria-pressed={submittedOnly}
+              onClick={() => setSubmittedOnly((v) => !v)}
+              className={`inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold ${
+                submittedOnly ? "bg-accent text-accent-foreground" : "bg-default text-foreground"
+              }`}
+            >
+              Submitted by student
+            </button>
+          }
           isLoading={list.isLoading}
           isError={list.isError}
           onRetry={() => list.refetch()}

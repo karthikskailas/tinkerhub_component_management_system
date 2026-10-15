@@ -57,7 +57,7 @@ export function RejectDialog({ open, submitting, onClose, onConfirm }: RejectDia
           rows={3}
           autoFocus
           placeholder="Let the requester know why (min 3 characters)"
-          className="min-h-11 w-full rounded-lg border border-field-border bg-field px-3 py-2.5 text-base text-field-foreground outline-none focus:border-field-border-focus"
+          className="min-h-11 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-base text-field-foreground outline-none focus:border-accent"
         />
       </label>
       <p className="text-sm text-muted">{trimmed.length}/{MAX_LENGTH}</p>

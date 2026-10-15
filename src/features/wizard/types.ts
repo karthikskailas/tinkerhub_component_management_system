@@ -4,6 +4,8 @@ export type ProjectPath = "registered" | "new";
 
 export interface WizardDraft {
   step: 1 | 2 | 3 | 4;
+  /** Step 1 answer: has the student added their project on the TinkerHub app? */
+  hasAdded: boolean | null;
   path: ProjectPath | null;
   requesterName: string;
   phone: string;
@@ -16,6 +18,7 @@ export interface WizardDraft {
 
 export const EMPTY_DRAFT: WizardDraft = {
   step: 1,
+  hasAdded: null,
   path: null,
   requesterName: "",
   phone: "",

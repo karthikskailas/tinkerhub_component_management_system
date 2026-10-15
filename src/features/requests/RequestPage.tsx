@@ -1,10 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useParams } from "react-router-dom";
+import { Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
 import { SkeletonLines } from "../../components/ui/Skeleton";
 import { toast } from "../../components/ui/Toast";
 import { parseSupabaseError } from "../../lib/errors";
+import { getSavedRequests } from "../../lib/storage";
 import { cancelRequest, resubmitRequest } from "./api";
+import { ReturnCard } from "./ReturnCard";
 import { StatusView } from "./StatusView";
 import { useRequest } from "./useRequest";
 import type { RequestDetail } from "./useRequest";
@@ -12,6 +14,7 @@ import type { RequestDetail } from "./useRequest";
 export function RequestPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const query = useRequest(id!);
 
@@ -58,6 +61,15 @@ export function RequestPage() {
     );
   }
 
+  // The anonymous session changed (cleared data, new device) so RLS hides this
+  // row: fall back to the public status link saved on this device.
+  const saved = getSavedRequests().find((r) => r.id === id);
+  if (query.isError && saved) {
+    return (
+      <Navigate to={`/r/${saved.token}`} replace state={{ note: "Showing your saved status link" }} />
+    );
+  }
+
   if (query.isError || !query.data) {
     return (
       <div className="min-h-dvh bg-transparent sm:px-4 sm:py-6">
@@ -81,12 +93,24 @@ export function RequestPage() {
       items={request.items}
       code={request.id.slice(0, 8).toUpperCase()}
       publicToken={request.publicToken}
+      requesterName={request.requesterName}
+      justSubmitted={!!(location.state as { justSubmitted?: boolean } | null)?.justSubmitted}
       expiresAt={request.expiresAt}
       isOwner
       onCancel={() => cancelMutation.mutateAsync()}
       cancelling={cancelMutation.isPending}
       onResubmit={() => resubmitMutation.mutateAsync()}
       resubmitting={resubmitMutation.isPending}
+      returning={request.status === "issued" && request.returnPending && !request.returnSubmission}
+      returnSlot={
+        <ReturnCard
+          requestId={request.id}
+          token={null}
+          pending={request.returnPending}
+          submission={request.returnSubmission}
+          invalidateKey={["request", id]}
+        />
+      }
     />
   );
 }

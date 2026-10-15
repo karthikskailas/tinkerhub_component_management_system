@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { SkeletonLines } from "../../components/ui/Skeleton";
 import { toast } from "../../components/ui/Toast";
 import { parseSupabaseError } from "../../lib/errors";
 import { supabase } from "../../lib/supabase";
 import { cancelRequest, getRequestByToken, resubmitRequest } from "./api";
+import { ReturnCard } from "./ReturnCard";
 import { StatusView } from "./StatusView";
 
 // RLS lets the owner (or staff) read their own row by any filter, including
@@ -22,6 +23,7 @@ async function fetchOwnRequestId(token: string): Promise<string | null> {
 export function TokenPage() {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
 
   const statusQuery = useQuery({
@@ -99,11 +101,28 @@ export function TokenPage() {
         qty: item.qty,
         approvedQty: item.approved_qty,
       }))}
+      code={request.code ?? undefined}
+      publicToken={token}
+      requesterName={request.requester_name}
+      expiresAt={request.expires_at}
+      note={(location.state as { note?: string } | null)?.note}
       isOwner={!!ownRequestId}
       onCancel={ownRequestId ? () => cancelMutation.mutateAsync() : undefined}
       cancelling={cancelMutation.isPending}
       onResubmit={ownRequestId ? () => resubmitMutation.mutateAsync() : undefined}
       resubmitting={resubmitMutation.isPending}
+      returning={
+        request.status === "issued" && (request.return_pending ?? false) && !request.return_submission
+      }
+      returnSlot={
+        <ReturnCard
+          requestId={ownRequestId ?? ""}
+          token={token!}
+          pending={request.return_pending ?? false}
+          submission={request.return_submission ?? null}
+          invalidateKey={["request_by_token", token]}
+        />
+      }
     />
   );
 }

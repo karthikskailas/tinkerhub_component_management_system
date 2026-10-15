@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { SkeletonLines } from "../../../components/ui/Skeleton";
 import { fetchRequestDetail, fetchRequestEvents } from "../requests/api";
 import { DetailShell } from "../requests/DetailShell";
+import { ReturnProof } from "../requests/ReturnProof";
 
 interface HistoryDetailDrawerProps {
   requestId: string;
@@ -55,6 +56,18 @@ export function HistoryDetailDrawer({ requestId, onClose }: HistoryDetailDrawerP
       <p className="text-sm text-muted">
         Submitted {new Date(detail.created_at).toLocaleString()}
       </p>
+
+      {detail.handed_over_by && (
+        <p className="text-sm text-foreground">Handed over by {detail.handed_over_by}</p>
+      )}
+      {detail.handover_confirmed_at && (
+        <p className="text-sm text-foreground">
+          Confirmed by staff at {new Date(detail.handover_confirmed_at).toLocaleString()}
+          {detail.handover_confirmed_by ? ` (${detail.handover_confirmed_by})` : ""}
+        </p>
+      )}
+
+      <ReturnProof detail={detail} />
 
       {detail.reject_reason && (
         <p className="rounded-xl bg-danger-soft p-3 text-sm text-danger-soft-foreground">

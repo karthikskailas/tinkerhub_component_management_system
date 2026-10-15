@@ -6,7 +6,9 @@ import { SkeletonLines } from "../../../components/ui/Skeleton";
 import { toast } from "../../../components/ui/Toast";
 import { parseSupabaseError } from "../../../lib/errors";
 import { useOnlineStatus } from "../../../lib/useOnlineStatus";
-import { fetchRequestDetail, issueRequest } from "../requests/api";
+import { relativeTime } from "../../../lib/relativeTime";
+import { fetchRequestDetail, issueRequest, resetHandoverConfirmation } from "../requests/api";
+import { ShareHandoverButtons } from "../requests/ShareHandover";
 import { DetailShell, QtyInput, RequesterHeader, Section } from "../requests/DetailShell";
 import { invalidateAfterRequestMutation } from "../requests/invalidate";
 import { fetchPickupCardData } from "../review/api";
@@ -26,6 +28,9 @@ export function IssueDetailPanel({ requestId, onClose, onIssued }: IssueDetailPa
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pickupCard, setPickupCard] = useState<PickupCardData | null>(null);
   const [pickupLoading, setPickupLoading] = useState(false);
+  const [handedOverBy, setHandedOverBy] = useState("");
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetReason, setResetReason] = useState("");
 
   const detailQuery = useQuery({
     queryKey: ["request_detail", requestId],
@@ -39,6 +44,8 @@ export function IssueDetailPanel({ requestId, onClose, onIssued }: IssueDetailPa
       if ((item.approved_qty ?? 0) > 0) defaults[item.component_id] = item.approved_qty ?? 0;
     }
     setIssuedQtys(defaults);
+    // Prefill from the on-site confirmation; the manager can still edit it.
+    setHandedOverBy((prev) => prev || (detailQuery.data.handover_confirmed_by ?? ""));
   }, [detailQuery.data]);
 
   useEffect(() => {
@@ -58,7 +65,7 @@ export function IssueDetailPanel({ requestId, onClose, onIssued }: IssueDetailPa
         component_id: i.component_id,
         issued_qty: issuedQtys[i.component_id] ?? i.approved_qty ?? 0,
       }));
-      return issueRequest(requestId, items);
+      return issueRequest(requestId, items, handedOverBy);
     },
     onSuccess: () => {
       toast.success(willComplete ? "Completed, nothing to return." : "Components issued.");
@@ -70,6 +77,19 @@ export function IssueDetailPanel({ requestId, onClose, onIssued }: IssueDetailPa
       void detailQuery.refetch();
       void queryClient.invalidateQueries({ queryKey: ["issue_requests"] });
     },
+  });
+
+  const resetMutation = useMutation({
+    mutationFn: () => resetHandoverConfirmation(requestId, resetReason),
+    onSuccess: () => {
+      toast.success("Confirmation reset.");
+      setResetOpen(false);
+      setResetReason("");
+      setHandedOverBy("");
+      void detailQuery.refetch();
+      void queryClient.invalidateQueries({ queryKey: ["issue_requests"] });
+    },
+    onError: (error) => toast.error(parseSupabaseError(error).message),
   });
 
   async function openPickupCard() {
@@ -120,11 +140,25 @@ export function IssueDetailPanel({ requestId, onClose, onIssued }: IssueDetailPa
           <Button variant="secondary" loading={pickupLoading} onClick={openPickupCard}>
             View pickup card
           </Button>
+          <ShareHandoverButtons
+            data={{
+              code: detail.code,
+              requesterName: detail.requester_name,
+              projectName: detail.project_name,
+              items: approvedLines.map((i) => ({
+                name: i.name,
+                location: i.location,
+                qty: i.approved_qty ?? 0,
+              })),
+              expiresAt: detail.expires_at,
+              publicToken: detail.public_token,
+            }}
+          />
           <Button
             disabled={notApproved || approvedLines.length === 0 || issueMutation.isPending || !isOnline}
             onClick={() => setConfirmOpen(true)}
           >
-            {isOnline ? "Issue components" : "Offline"}
+            {isOnline ? "Mark as given" : "Offline"}
           </Button>
         </>
       }
@@ -134,6 +168,27 @@ export function IssueDetailPanel({ requestId, onClose, onIssued }: IssueDetailPa
         phone={detail.phone}
         project={detail.project_name ?? "Untitled project"}
       />
+
+      {detail.handover_confirmed_at && (
+        <div className="flex flex-col gap-2 rounded-xl bg-success-soft p-4">
+          <p className="text-base font-semibold text-success">
+            Confirmed by {detail.handover_confirmed_by} · {relativeTime(detail.handover_confirmed_at)}
+          </p>
+          <p className="text-sm text-foreground">
+            On-site staff confirmed the handover. Stock and status change only when you tap
+            "Mark as given".
+          </p>
+          {!notApproved && (
+            <button
+              type="button"
+              onClick={() => setResetOpen(true)}
+              className="inline-flex min-h-11 items-center self-start text-sm font-semibold text-accent underline"
+            >
+              Reset confirmation
+            </button>
+          )}
+        </div>
+      )}
 
       {notApproved && (
         <p className="text-sm font-medium text-warning">
@@ -183,6 +238,16 @@ export function IssueDetailPanel({ requestId, onClose, onIssued }: IssueDetailPa
             </li>
           ))}
         </ul>
+        <label className="flex flex-col gap-1">
+          <span className="text-sm font-medium text-foreground">Handed over by</span>
+          <input
+            value={handedOverBy}
+            maxLength={80}
+            onChange={(e) => setHandedOverBy(e.target.value)}
+            placeholder="Name of the person who handed over"
+            className="min-h-11 rounded-lg border border-border bg-background px-3 text-base text-field-foreground outline-none focus:border-accent"
+          />
+        </label>
         <div className="flex justify-end gap-2">
           <Button variant="secondary" onClick={() => setConfirmOpen(false)} disabled={issueMutation.isPending}>
             Cancel
@@ -194,7 +259,36 @@ export function IssueDetailPanel({ requestId, onClose, onIssued }: IssueDetailPa
               issueMutation.mutate();
             }}
           >
-            Confirm issue
+            Mark as given
+          </Button>
+        </div>
+      </Modal>
+
+      <Modal open={resetOpen} onClose={() => setResetOpen(false)} titleId="reset-confirm-title">
+        <h2 id="reset-confirm-title" className="text-xl font-bold text-foreground">
+          Reset confirmation
+        </h2>
+        <p className="text-sm text-muted">
+          On-site staff will be able to confirm this handover again.
+        </p>
+        <label className="flex flex-col gap-1">
+          <span className="text-sm font-medium text-foreground">Reason</span>
+          <input
+            value={resetReason}
+            onChange={(e) => setResetReason(e.target.value)}
+            className="min-h-11 rounded-lg border border-border bg-background px-3 text-base text-field-foreground outline-none focus:border-accent"
+          />
+        </label>
+        <div className="flex justify-end gap-2">
+          <Button variant="secondary" onClick={() => setResetOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            loading={resetMutation.isPending}
+            disabled={resetReason.trim().length < 3}
+            onClick={() => resetMutation.mutate()}
+          >
+            Reset
           </Button>
         </div>
       </Modal>

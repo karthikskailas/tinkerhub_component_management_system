@@ -55,12 +55,28 @@ function HistoryIcon({ className }: { className?: string }) {
   );
 }
 
+function StaffIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className={className}>
+      <circle cx="9" cy="8" r="3.5" />
+      <path d="M2.5 20a6.5 6.5 0 0 1 13 0" />
+      <path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6.5 6.5 0 0 1 3.5 6" />
+    </svg>
+  );
+}
+
 export const NAV_ITEMS: NavItem[] = [
   { to: "/admin/review", label: "Review", roles: ["admin"], icon: ReviewIcon },
   { to: "/admin/issue", label: "Issue", roles: ["admin", "inventory_manager"], icon: IssueIcon },
   { to: "/admin/inventory", label: "Inventory", roles: ["admin", "inventory_manager"], icon: InventoryIcon },
   { to: "/admin/returns", label: "Returns", roles: ["admin", "inventory_manager"], icon: ReturnsIcon },
   { to: "/admin/history", label: "History", roles: ["admin", "inventory_manager"], icon: HistoryIcon },
+  {
+    to: "/admin/handover-staff",
+    label: "On-site staff",
+    roles: ["admin", "inventory_manager"],
+    icon: StaffIcon,
+  },
 ];
 
 // Keep the staff shell out of search engines without pulling in a head-

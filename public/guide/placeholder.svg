@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 270 480" role="img" aria-label="Screenshot coming soon">
+  <rect width="270" height="480" rx="24" fill="#eef0f8"/>
+  <rect x="16" y="16" width="238" height="448" rx="16" fill="#ffffff" stroke="#d5d9ea" stroke-width="2"/>
+  <rect x="36" y="48" width="120" height="14" rx="7" fill="#d5d9ea"/>
+  <rect x="36" y="76" width="80" height="10" rx="5" fill="#e4e7f3"/>
+  <rect x="36" y="116" width="198" height="52" rx="12" fill="#f3f4fa" stroke="#e4e7f3"/>
+  <rect x="36" y="188" width="198" height="52" rx="12" fill="#f3f4fa" stroke="#e4e7f3"/>
+  <rect x="36" y="260" width="198" height="110" rx="12" fill="#f3f4fa" stroke="#e4e7f3"/>
+  <rect x="150" y="410" width="84" height="32" rx="16" fill="#d5d9ea"/>
+  <text x="135" y="320" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#8a90a8">Screenshot coming soon</text>
+</svg>

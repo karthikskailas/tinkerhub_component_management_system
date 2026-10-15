@@ -19,6 +19,11 @@ interface StatusViewProps {
   items: StatusViewItem[];
   code?: string;
   publicToken?: string;
+  requesterName?: string;
+  /** Set right after submitting: shows the "save your status link" card. */
+  justSubmitted?: boolean;
+  /** Optional one-line note shown above the status (e.g. saved-link fallback). */
+  note?: string;
   /** When an approved request stops being collectable (ISO), if known. */
   expiresAt?: string | null;
   isOwner: boolean;
@@ -26,6 +31,10 @@ interface StatusViewProps {
   cancelling?: boolean;
   onResubmit?: () => Promise<unknown>;
   resubmitting?: boolean;
+  /** Extra card shown under the parts list (the return flow while issued). */
+  returnSlot?: React.ReactNode;
+  /** Issued and waiting for the return form: collapse everything else so the form fits one screen. */
+  returning?: boolean;
 }
 
 type StatusIconKind = "check" | "alert" | "clock" | "dash";
@@ -90,29 +99,31 @@ const TRACK: { status: RequestStatus; label: string }[] = [
   { status: "returned", label: "Returned" },
 ];
 
-function LifecycleTrack({ status }: { status: RequestStatus }) {
+function LifecycleTrack({ status, compact = false }: { status: RequestStatus; compact?: boolean }) {
   const current = TRACK.findIndex((t) => t.status === status);
   if (current < 0) return null;
   return (
-    <ol className="flex w-full items-start" aria-label="Request progress">
+    <ol className="flex w-full items-start [[data-kbd]_&]:hidden" aria-label="Request progress">
       {TRACK.map((t, i) => {
         const done = i <= current;
         return (
           <li
             key={t.status}
             aria-current={i === current ? "step" : undefined}
-            className="flex flex-1 flex-col items-center gap-1.5"
+            className={`flex flex-1 flex-col items-center ${compact ? "gap-0.5" : "gap-1.5"}`}
           >
             <span className="flex w-full items-center">
               <span className={`h-0.5 flex-1 ${i === 0 ? "bg-transparent" : i <= current ? "bg-accent" : "bg-border"}`} />
               <span
-                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 ${
+                className={`flex shrink-0 items-center justify-center rounded-full border-2 ${
+                  compact ? "h-5 w-5" : "h-7 w-7"
+                } ${
                   done ? "border-accent bg-accent text-accent-foreground" : "border-border bg-surface"
                 }`}
               >
                 {done ? (
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round"
-                    strokeLinejoin="round" className="h-4 w-4" aria-hidden>
+                    strokeLinejoin="round" className={compact ? "h-3 w-3" : "h-4 w-4"} aria-hidden>
                     <path d="M5 13l4 4L19 7" />
                   </svg>
                 ) : (
@@ -121,7 +132,7 @@ function LifecycleTrack({ status }: { status: RequestStatus }) {
               </span>
               <span className={`h-0.5 flex-1 ${i === TRACK.length - 1 ? "bg-transparent" : i < current ? "bg-accent" : "bg-border"}`} />
             </span>
-            <span className={`text-sm ${i === current ? "font-semibold text-accent" : "text-muted"}`}>
+            <span className={`${compact ? "text-xs" : "text-sm"} ${i === current ? "font-semibold text-accent" : "text-muted"}`}>
               {t.label}
             </span>
           </li>
@@ -131,23 +142,47 @@ function LifecycleTrack({ status }: { status: RequestStatus }) {
   );
 }
 
-function CodeQr({ code, size = 176 }: { code: string; size?: number }) {
+// The QR carries only the staff handover link: no phone, name or code in the URL.
+// margin 4 is the standard quiet zone; the white tile keeps it scannable in dark mode.
+// `fluid` sizes the QR from the viewport height (7rem to 14rem), so it shrinks on
+// short phones instead of forcing the page to scroll.
+function HandoverQr({
+  url,
+  code,
+  size = 220,
+  fluid = false,
+}: {
+  url: string;
+  code: string;
+  size?: number;
+  fluid?: boolean;
+}) {
   const [src, setSrc] = useState<string | null>(null);
   useEffect(() => {
     let live = true;
     import("qrcode").then(({ default: QRCode }) =>
-      QRCode.toDataURL(code, { width: size * 2, margin: 1 }).then((url) => {
-        if (live) setSrc(url);
+      QRCode.toDataURL(url, { width: size * 3, margin: 4 }).then((data) => {
+        if (live) setSrc(data);
       }),
     );
     return () => {
       live = false;
     };
-  }, [code, size]);
+  }, [url, size]);
   return src ? (
-    <img src={src} alt={`QR code for request ${code}`} width={size} height={size} className="shrink-0 rounded-xl bg-white p-1" />
+    <img
+      src={src}
+      alt={`QR code for request ${code}`}
+      width={size}
+      height={size}
+      className={fluid ? "aspect-square h-[clamp(6rem,19dvh,14rem)] w-auto rounded-xl bg-white" : "shrink-0 rounded-xl bg-white"}
+    />
   ) : (
-    <div style={{ width: size, height: size }} className="rounded-xl bg-default" aria-hidden />
+    <div
+      style={fluid ? undefined : { width: size, height: size }}
+      className={fluid ? "aspect-square h-[clamp(6rem,19dvh,14rem)] rounded-xl bg-default" : "rounded-xl bg-default"}
+      aria-hidden
+    />
   );
 }
 
@@ -165,10 +200,14 @@ const ICON_PATH: Record<StatusIconKind, string> = {
   dash: "M7 12h10",
 };
 
-function StatusIcon({ kind }: { kind: StatusIconKind }) {
+function StatusIcon({ kind, small = false }: { kind: StatusIconKind; small?: boolean }) {
   return (
-    <div className={`relative flex h-20 w-20 items-center justify-center rounded-full ${ICON_STYLE[kind]}`}>
-      {kind === "check" &&
+    <div
+      className={`relative flex items-center justify-center rounded-full ${
+        small ? "h-12 w-12" : "h-20 w-20"
+      } ${ICON_STYLE[kind]}`}
+    >
+      {kind === "check" && !small &&
         [0, 60, 120, 180, 240, 300].map((deg) => (
           <span
             key={deg}
@@ -183,7 +222,7 @@ function StatusIcon({ kind }: { kind: StatusIconKind }) {
         stroke="currentColor"
         strokeWidth={2.5}
         strokeLinecap="round"
-        className="h-10 w-10"
+        className={small ? "h-6 w-6" : "h-10 w-10"}
         aria-hidden
       >
         <path d={ICON_PATH[kind]} />
@@ -239,18 +278,26 @@ export function StatusView({
   items,
   code,
   publicToken,
+  requesterName,
+  justSubmitted,
+  note,
   expiresAt,
   isOwner,
   onCancel,
   cancelling,
   onResubmit,
   resubmitting,
+  returnSlot,
+  returning = false,
 }: StatusViewProps) {
   const navigate = useNavigate();
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [showAll, setShowAll] = useState(false);
   // On the pickup screen the code is the point; the parts list stays folded until asked for.
-  const collapsedCount = status === "approved" ? 0 : 3;
+  // Everything fits one screen: the parts card takes the leftover height and
+  // scrolls inside itself, so only the pickup screen folds the list.
+  const folded = status === "approved" || returning;
+  const collapsedCount = status === "approved" ? 0 : items.length;
   const copy = STATUS_COPY[status];
   const catalog = useCatalog();
   const imageByName = new Map(
@@ -267,6 +314,23 @@ export function StatusView({
     }
   }
 
+  async function saveQr() {
+    if (!publicToken || !code) return;
+    try {
+      const { default: QRCode } = await import("qrcode");
+      const dataUrl = await QRCode.toDataURL(`${window.location.origin}/give/${publicToken}`, {
+        width: 800,
+        margin: 4,
+      });
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = `maker-cart-${code}.png`;
+      a.click();
+    } catch {
+      toast.error("Couldn't save the QR.");
+    }
+  }
+
   async function copyLink() {
     if (!publicToken) return;
     const url = `${window.location.origin}/r/${publicToken}`;
@@ -279,17 +343,18 @@ export function StatusView({
   }
 
   return (
-    <div className="min-h-dvh bg-transparent sm:px-4 sm:py-6">
-      <div className="motion-list mx-auto flex w-full max-w-lg flex-col items-center gap-3 p-4 text-center sm:rounded-3xl sm:bg-surface sm:p-8 sm:shadow-surface">
-        <p className="self-start text-base font-bold tracking-tight text-foreground">
+    <div className="flex h-[var(--app-h,100dvh)] flex-col bg-transparent sm:block sm:h-auto sm:px-4 sm:py-6">
+      <div className={`motion-list mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col items-center overflow-y-auto px-4 text-center ${returning ? "gap-2 py-3" : "gap-3 py-4"} sm:overflow-visible sm:rounded-3xl sm:bg-surface sm:p-8 sm:shadow-surface`}>
+        <p className="self-start text-base font-bold tracking-tight text-foreground [[data-kbd]_&]:hidden">
           TinkerSpace <span className="text-accent">Maker Cart</span>
         </p>
-        <LifecycleTrack status={status} />
-        {status !== "approved" && <StatusIcon kind={copy.icon} />}
+        {note && <p className="w-full rounded-xl bg-accent/10 p-3 text-sm text-foreground">{note}</p>}
+        <LifecycleTrack status={status} compact />
+        {!folded && <StatusIcon kind={copy.icon} small />}
 
         <div className="flex flex-col gap-1">
-          <h1 className={`${status === "approved" ? "text-xl" : "text-2xl"} font-bold text-foreground`}>{copy.title}</h1>
-          {copy.body && <p className="text-sm text-muted">{copy.body}</p>}
+          <h1 className={returning ? "sr-only" : "text-xl font-bold text-foreground"}>{copy.title}</h1>
+          {copy.body && !returning && <p className="text-sm text-muted">{copy.body}</p>}
           {status === "approved" && (
             <div className="mt-2 flex w-full items-center gap-3 rounded-xl bg-accent/10 p-2.5 text-left">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent">
@@ -299,7 +364,7 @@ export function StatusView({
                 {expiresAt && (
                   <p className="text-base font-bold text-foreground">Collect by {formatWhen(expiresAt)}</p>
                 )}
-                <p className="text-sm text-muted">{PICKUP_INFO ?? PICKUP_FALLBACK}</p>
+                <p className="text-sm text-muted [@media(max-height:620px)]:hidden">{PICKUP_INFO ?? PICKUP_FALLBACK}</p>
               </div>
             </div>
           )}
@@ -315,21 +380,28 @@ export function StatusView({
           </div>
         )}
 
-        {projectName && status !== "approved" && (
+        {projectName && !folded && (
           <p className="text-sm text-muted">
             For project <span className="font-medium text-foreground">{projectName}</span>
           </p>
         )}
 
-        {code && status === "approved" ? (
+        {code && status === "approved" && publicToken ? (
           <div className="motion-pass w-full">
-            <div className="flex w-full items-center gap-4 rounded-xl bg-surface p-3 text-left shadow-surface">
-              <CodeQr code={code} size={144} />
-              <div className="flex min-w-0 flex-1 flex-col items-start gap-2">
-                <div>
-                  <p className="text-sm font-medium uppercase tracking-wider text-muted">Pickup code</p>
-                  <p className="font-mono text-2xl font-bold tracking-wide text-foreground">{code}</p>
-                </div>
+            <div className="flex w-full flex-col items-center gap-2 rounded-xl bg-surface p-3 shadow-surface">
+              <div className="flex w-full items-center justify-center">
+                <HandoverQr url={`${window.location.origin}/give/${publicToken}`} code={code} size={220} fluid />
+              </div>
+              <p className="font-mono text-2xl font-bold tracking-wider text-foreground">{code}</p>
+              {requesterName && <p className="-mt-1 text-sm font-medium text-muted [@media(max-height:640px)]:hidden">{requesterName}</p>}
+              <div className="flex flex-wrap justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={saveQr}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full bg-accent/10 px-4 text-sm font-semibold text-accent"
+                >
+                  Save QR as image
+                </button>
                 <button
                   type="button"
                   onClick={copyCode}
@@ -338,16 +410,18 @@ export function StatusView({
                   <SvgIcon d={PATH.copy} className="h-4 w-4" />
                   Copy code
                 </button>
-                <p className="text-sm text-muted">Turn brightness up if it won't scan.</p>
               </div>
+              <p className="text-sm text-muted [@media(max-height:600px)]:hidden">
+                Show this at the lab. Turn brightness up if it won't scan.
+              </p>
             </div>
           </div>
         ) : (
           code && (
-            <div className="flex w-full items-center justify-between gap-3 rounded-xl bg-accent/10 p-4 text-left">
+            <div className={`flex w-full items-center justify-between gap-3 rounded-xl bg-accent/10 text-left [[data-kbd]_&]:hidden ${returning ? "px-3 py-1.5" : "p-3"}`}>
               <div>
                 <p className="text-sm font-medium uppercase tracking-wider text-muted">Request code</p>
-                <p className="font-mono text-3xl font-bold tracking-wider text-foreground">{code}</p>
+                <p className={`font-mono font-bold tracking-wider text-foreground ${returning ? "text-xl" : "text-2xl"}`}>{code}</p>
               </div>
               <button
                 type="button"
@@ -361,7 +435,11 @@ export function StatusView({
           )
         )}
 
-        <div className="w-full rounded-xl bg-surface px-4 py-1 text-left shadow-surface">
+        <div
+          className={`flex w-full flex-col overflow-hidden rounded-xl bg-surface px-4 py-1 text-left shadow-surface [[data-kbd]_&]:hidden ${
+            status === "approved" ? "shrink-0" : returning ? "min-h-11 flex-1" : "min-h-20 flex-1"
+          }`}
+        >
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-base font-semibold text-foreground">Components ({items.length})</h2>
             {collapsedCount === 0 && items.length > 0 && (
@@ -375,7 +453,7 @@ export function StatusView({
               </button>
             )}
           </div>
-          <ul className="flex flex-col">
+          <ul className="flex min-h-0 flex-col overflow-y-auto overscroll-contain">
             {(showAll ? items : items.slice(0, collapsedCount)).map((item) => {
               const photo = imageByName.get(item.name) ?? null;
               return (
@@ -409,24 +487,30 @@ export function StatusView({
           )}
         </div>
 
-        <div className="flex w-full flex-col gap-2">
+        <div className="w-full">{returnSlot}</div>
+
+        <div className="flex w-full shrink-0 flex-col gap-2">
           {isOwner && status === "rejected" && onResubmit && (
             <Button onClick={onResubmit} loading={resubmitting} fullWidth className="rounded-full">
               Edit and resubmit
             </Button>
           )}
 
-          {isOwner && (status === "cancelled" || status === "expired") && (
+          {isOwner && (status === "cancelled" || status === "expired" || status === "returned") && (
             <Button onClick={() => navigate("/")} fullWidth className="rounded-full">
               Start a new request
             </Button>
           )}
 
-          {publicToken && (
+          {publicToken && !returning && (
             <button
               type="button"
               onClick={copyLink}
-              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full border-2 border-accent/40 bg-surface px-5 text-base font-semibold text-accent"
+              className={`inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-5 text-base font-semibold ${
+                justSubmitted
+                  ? "bg-accent text-accent-foreground"
+                  : "border-2 border-accent/40 bg-surface text-accent"
+              }`}
             >
               <SvgIcon d={PATH.link} />
               Copy status link

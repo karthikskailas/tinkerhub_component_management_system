@@ -41,6 +41,7 @@ export type Database = {
     Tables: {
       components: {
         Row: {
+          available: number | null
           count: number
           description: string | null
           id: string
@@ -50,8 +51,10 @@ export type Database = {
           reserved: number
           returnable: boolean
           updated_at: string
+          updated_by: string | null
         }
         Insert: {
+          available?: number | null
           count?: number
           description?: string | null
           id?: string
@@ -63,6 +66,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          available?: number | null
           count?: number
           description?: string | null
           id?: string
@@ -72,6 +76,99 @@ export type Database = {
           reserved?: number
           returnable?: boolean
           updated_at?: string
+        }
+        Relationships: []
+      }
+      handover_staff: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          designation: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          designation?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          designation?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      component_fields: {
+        Row: {
+          archived: boolean
+          created_at: string
+          is_core: boolean
+          key: string
+          label: string
+          max_length: number | null
+          searchable: boolean
+          show_in_table: boolean
+          sort: number
+          type: string
+        }
+        Insert: {
+          archived?: boolean
+          created_at?: string
+          is_core?: boolean
+          key: string
+          label: string
+          max_length?: number | null
+          searchable?: boolean
+          show_in_table?: boolean
+          sort?: number
+          type: string
+        }
+        Update: {
+          archived?: boolean
+          created_at?: string
+          is_core?: boolean
+          key?: string
+          label?: string
+          max_length?: number | null
+          searchable?: boolean
+          show_in_table?: boolean
+          sort?: number
+          type?: string
+        }
+        Relationships: []
+      }
+      component_edits: {
+        Row: {
+          actor_id: string | null
+          changes: Json
+          component_id: string
+          created_at: string
+          id: number
+          reason: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          changes: Json
+          component_id: string
+          created_at?: string
+          id?: never
+          reason?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          changes?: Json
+          component_id?: string
+          created_at?: string
+          id?: never
+          reason?: string | null
         }
         Relationships: []
       }
@@ -278,6 +375,9 @@ export type Database = {
           approved_at: string | null
           created_at: string
           expires_at: string | null
+          handed_over_by: string | null
+          handover_confirmed_at: string | null
+          handover_confirmed_by: string | null
           id: string
           issued_at: string | null
           issued_by: string | null
@@ -285,11 +385,19 @@ export type Database = {
           project_id: string | null
           public_token: string
           reject_reason: string | null
+          request_code: string | null
           requester_id: string
           requester_name: string
+          return_note: string | null
+          return_photo_path: string | null
+          return_receiver_designation: string | null
+          return_receiver_name: string | null
+          return_receiver_staff_id: string | null
+          return_submitted_at: string | null
           returned_at: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          screenshot_deleted_at: string | null
           screenshot_path: string | null
           status: Database["public"]["Enums"]["request_status"]
           updated_at: string
@@ -298,6 +406,9 @@ export type Database = {
           approved_at?: string | null
           created_at?: string
           expires_at?: string | null
+          handed_over_by?: string | null
+          handover_confirmed_at?: string | null
+          handover_confirmed_by?: string | null
           id?: string
           issued_at?: string | null
           issued_by?: string | null
@@ -305,11 +416,19 @@ export type Database = {
           project_id?: string | null
           public_token?: string
           reject_reason?: string | null
+          request_code?: string | null
           requester_id?: string
           requester_name: string
+          return_note?: string | null
+          return_photo_path?: string | null
+          return_receiver_designation?: string | null
+          return_receiver_name?: string | null
+          return_receiver_staff_id?: string | null
+          return_submitted_at?: string | null
           returned_at?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          screenshot_deleted_at?: string | null
           screenshot_path?: string | null
           status?: Database["public"]["Enums"]["request_status"]
           updated_at?: string
@@ -318,6 +437,9 @@ export type Database = {
           approved_at?: string | null
           created_at?: string
           expires_at?: string | null
+          handed_over_by?: string | null
+          handover_confirmed_at?: string | null
+          handover_confirmed_by?: string | null
           id?: string
           issued_at?: string | null
           issued_by?: string | null
@@ -325,11 +447,19 @@ export type Database = {
           project_id?: string | null
           public_token?: string
           reject_reason?: string | null
+          request_code?: string | null
           requester_id?: string
           requester_name?: string
+          return_note?: string | null
+          return_photo_path?: string | null
+          return_receiver_designation?: string | null
+          return_receiver_name?: string | null
+          return_receiver_staff_id?: string | null
+          return_submitted_at?: string | null
           returned_at?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          screenshot_deleted_at?: string | null
           screenshot_path?: string | null
           status?: Database["public"]["Enums"]["request_status"]
           updated_at?: string
@@ -340,6 +470,13 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requests_return_receiver_staff_id_fkey"
+            columns: ["return_receiver_staff_id"]
+            isOneToOne: false
+            referencedRelation: "handover_staff"
             referencedColumns: ["id"]
           },
         ]
@@ -368,6 +505,44 @@ export type Database = {
         }
         Relationships: []
       }
+      storage_cleanup_queue: {
+        Row: {
+          bucket: string
+          done_at: string | null
+          id: number
+          path: string
+          queued_at: string
+          reason: string | null
+          request_id: string | null
+        }
+        Insert: {
+          bucket?: string
+          done_at?: string | null
+          id?: never
+          path: string
+          queued_at?: string
+          reason?: string | null
+          request_id?: string | null
+        }
+        Update: {
+          bucket?: string
+          done_at?: string | null
+          id?: never
+          path?: string
+          queued_at?: string
+          reason?: string | null
+          request_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storage_cleanup_queue_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       component_catalog: {
@@ -391,6 +566,7 @@ export type Database = {
           available?: never
           description?: string | null
           id?: string | null
+          image_url?: string | null
           name?: string | null
           returnable?: boolean | null
         }
@@ -398,8 +574,52 @@ export type Database = {
       }
     }
     Functions: {
+      _submit_return: {
+        Args: {
+          p_note: string
+          p_photo_path: string
+          p_receiver_designation: string
+          p_receiver_name: string
+          p_receiver_staff_id: string
+          p_request_id: string
+          p_token: string
+        }
+        Returns: Json
+      }
+      add_handover_staff: {
+        Args: { p_designation?: string; p_name: string }
+        Returns: string
+      }
       adjust_component: {
         Args: { p_component_id: string; p_new_count: number; p_reason: string }
+        Returns: undefined
+      }
+      create_component_field: {
+        Args: {
+          p_label: string
+          p_type?: string
+          p_max_length?: number | null
+          p_searchable?: boolean
+          p_key?: string | null
+        }
+        Returns: string
+      }
+      delete_component: {
+        Args: { p_component_id: string; p_reason?: string | null }
+        Returns: undefined
+      }
+      update_component_field: {
+        Args: {
+          p_key: string
+          p_label?: string | null
+          p_show_in_table?: boolean | null
+          p_searchable?: boolean | null
+          p_archived?: boolean | null
+        }
+        Returns: undefined
+      }
+      update_component: {
+        Args: { p_component_id: string; p_fields: Json; p_reason?: string | null }
         Returns: undefined
       }
       admin_cancel_request: {
@@ -411,8 +631,21 @@ export type Database = {
         Returns: Json
       }
       cancel_request: { Args: { p_request_id: string }; Returns: undefined }
+      check_rate_limit: {
+        Args: { p_action: string; p_max: number; p_minutes: number }
+        Returns: undefined
+      }
       commit_inventory_upload: {
         Args: { p_reason: string; p_rows: Json }
+        Returns: Json
+      }
+      confirm_handover: {
+        Args: {
+          p_other_designation?: string
+          p_other_name?: string
+          p_staff_id?: string
+          p_token: string
+        }
         Returns: Json
       }
       expire_stale_approvals: { Args: never; Returns: undefined }
@@ -423,12 +656,25 @@ export type Database = {
           name: string
         }[]
       }
+      get_handover_page: { Args: { p_token: string }; Returns: Json }
       get_request_by_token: { Args: { p_token: string }; Returns: Json }
       is_admin: { Args: never; Returns: boolean }
       is_staff: { Args: never; Returns: boolean }
       issue_request: {
-        Args: { p_items?: Json; p_request_id: string }
+        Args: {
+          p_handed_over_by?: string
+          p_items?: Json
+          p_request_id: string
+        }
         Returns: undefined
+      }
+      list_handover_staff_public: {
+        Args: never
+        Returns: {
+          designation: string
+          id: string
+          name: string
+        }[]
       }
       preview_inventory_upload: {
         Args: { p_rows: Json }
@@ -450,7 +696,22 @@ export type Database = {
         Args: { p_reason: string; p_request_id: string }
         Returns: undefined
       }
+      resolve_handover_code: { Args: { p_code: string }; Returns: string }
+      reset_handover_confirmation: {
+        Args: { p_reason: string; p_request_id: string }
+        Returns: undefined
+      }
+      reset_return_submission: {
+        Args: { p_reason: string; p_request_id: string }
+        Returns: undefined
+      }
       resubmit_request: { Args: { p_old_request_id: string }; Returns: Json }
+      set_handover_staff_active: {
+        Args: { p_active: boolean; p_id: string }
+        Returns: undefined
+      }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       staff_role: {
         Args: never
         Returns: Database["public"]["Enums"]["staff_role"]
@@ -469,6 +730,28 @@ export type Database = {
           public_token: string
           status: Database["public"]["Enums"]["request_status"]
         }[]
+      }
+      submit_return: {
+        Args: {
+          p_note?: string
+          p_photo_path: string
+          p_receiver_designation?: string
+          p_receiver_name?: string
+          p_receiver_staff_id?: string
+          p_request_id: string
+        }
+        Returns: Json
+      }
+      submit_return_by_token: {
+        Args: {
+          p_note?: string
+          p_photo_path: string
+          p_receiver_designation?: string
+          p_receiver_name?: string
+          p_receiver_staff_id?: string
+          p_token: string
+        }
+        Returns: Json
       }
       verify_return: {
         Args: { p_items: Json; p_request_id: string }

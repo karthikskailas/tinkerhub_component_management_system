@@ -216,6 +216,7 @@ export interface PickupCardData {
   project_name: string | null;
   items: PickupCardItem[];
   expires_at: string | null;
+  public_token: string;
 }
 
 // approve_request's own JSON response doesn't include expires_at even
@@ -223,14 +224,16 @@ export interface PickupCardData {
 // assumed client-side (e.g. hardcoding "+7 days") to stay correct if the
 // backend's expiry window ever changes. See the backend-mismatch note in
 // the final report for this phase.
-export async function fetchExpiresAt(requestId: string): Promise<string | null> {
+export async function fetchApprovalExtras(
+  requestId: string,
+): Promise<{ expires_at: string | null; public_token: string }> {
   const { data, error } = await supabase
     .from("requests")
-    .select("expires_at")
+    .select("expires_at, public_token")
     .eq("id", requestId)
     .single();
   if (error) throw error;
-  return data.expires_at;
+  return data;
 }
 
 export async function approveRequest(
@@ -242,9 +245,9 @@ export async function approveRequest(
     p_items: items,
   });
   if (error) throw error;
-  const card = data as unknown as Omit<PickupCardData, "expires_at">;
-  const expires_at = await fetchExpiresAt(requestId);
-  return { ...card, expires_at };
+  const card = data as unknown as Omit<PickupCardData, "expires_at" | "public_token">;
+  const extras = await fetchApprovalExtras(requestId);
+  return { ...card, ...extras };
 }
 
 export async function rejectRequest(requestId: string, reason: string): Promise<void> {
@@ -268,7 +271,10 @@ export async function adminCancelRequest(requestId: string, reason: string): Pro
 // Approved tab, rather than fresh off the approve_request response).
 // ============================================================
 export async function fetchPickupCardData(requestId: string): Promise<PickupCardData> {
-  const detail = await fetchRequestDetail(requestId);
+  const [detail, extras] = await Promise.all([
+    fetchRequestDetail(requestId),
+    fetchApprovalExtras(requestId),
+  ]);
   return {
     request_id: detail.id,
     short_code: detail.id.slice(0, 8).toUpperCase(),
@@ -276,6 +282,7 @@ export async function fetchPickupCardData(requestId: string): Promise<PickupCard
     phone: detail.phone,
     project_name: detail.project_name,
     expires_at: detail.expires_at,
+    public_token: extras.public_token,
     items: detail.items
       .filter((item) => (item.approved_qty ?? 0) > 0)
       .map((item) => ({

@@ -44,7 +44,7 @@ export function CancelApprovalDialog({
           rows={3}
           autoFocus
           placeholder="Why is this approval being cancelled?"
-          className="min-h-11 w-full rounded-lg border border-field-border bg-field px-3 py-2.5 text-base text-field-foreground outline-none focus:border-field-border-focus"
+          className="min-h-11 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-base text-field-foreground outline-none focus:border-accent"
         />
       </label>
 

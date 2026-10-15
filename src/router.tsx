@@ -12,6 +12,12 @@ const RequestPage = lazy(() =>
 const TokenPage = lazy(() =>
   import("./features/requests/TokenPage").then((m) => ({ default: m.TokenPage })),
 );
+const GivePage = lazy(() =>
+  import("./features/give/GivePage").then((m) => ({ default: m.GivePage })),
+);
+const GiveCodePage = lazy(() =>
+  import("./features/give/GiveCodePage").then((m) => ({ default: m.GiveCodePage })),
+);
 const NotFound = lazy(() => import("./components/NotFound"));
 
 // Dev-only perf harness (see src/dev/PickerBench.tsx) — import.meta.env.DEV
@@ -50,6 +56,11 @@ const ReturnsPage = lazy(() =>
 const HistoryPage = lazy(() =>
   import("./features/admin/history/HistoryPage").then((m) => ({ default: m.HistoryPage })),
 );
+const HandoverStaffPage = lazy(() =>
+  import("./features/admin/handover/HandoverStaffPage").then((m) => ({
+    default: m.HandoverStaffPage,
+  })),
+);
 const RequireStaff = lazy(() =>
   import("./features/admin/RequireStaff").then((m) => ({ default: m.RequireStaff })),
 );
@@ -80,6 +91,8 @@ function ClientRoutes() {
       <Route path="/" element={<Wizard />} />
       <Route path="/request/:id" element={<RequestPage />} />
       <Route path="/r/:token" element={<TokenPage />} />
+      <Route path="/give" element={<GiveCodePage />} />
+      <Route path="/give/:token" element={<GivePage />} />
       {PickerBench && <Route path="/__dev/picker-bench" element={<PickerBench />} />}
       <Route path="*" element={<NotFound />} />
     </Routes>
@@ -170,6 +183,14 @@ function AdminRoutes() {
           element={
             <RequireStaff roles={["admin", "inventory_manager"]}>
               <HistoryPage />
+            </RequireStaff>
+          }
+        />
+        <Route
+          path="handover-staff"
+          element={
+            <RequireStaff roles={["admin", "inventory_manager"]}>
+              <HandoverStaffPage />
             </RequireStaff>
           }
         />

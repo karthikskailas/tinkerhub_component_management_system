@@ -18,9 +18,9 @@ export function Step3Components({ cart, onCartChange, onBack, onNext }: Step3Pro
   const headingRef = useFocusHeading();
 
   return (
-    <div className="motion-list flex flex-col gap-4">
-      <h1 ref={headingRef} tabIndex={-1} className="text-2xl font-bold text-foreground focus:outline-none">Select components</h1>
-      <p className="-mt-2 text-sm text-muted">Choose the components you need for your project.</p>
+    <div className="motion-list flex min-h-0 flex-1 flex-col gap-3">
+      <h1 ref={headingRef} tabIndex={-1} className="text-xl font-bold text-foreground focus:outline-none group-data-[typing]:hidden">Select components</h1>
+      <p className="-mt-1.5 text-sm text-muted group-data-[typing]:hidden">Choose the components you need for your project.</p>
 
       {catalogQuery.isLoading && <SkeletonLines count={6} />}
       {catalogQuery.isError && (
@@ -37,7 +37,7 @@ export function Step3Components({ cart, onCartChange, onBack, onNext }: Step3Pro
         <ComponentPicker items={catalogQuery.data} cart={cart} onChange={onCartChange} />
       )}
 
-      <div className="sticky bottom-0 -mx-4 flex items-center gap-3 border-t border-border bg-surface px-4 py-3 sm:-mx-6 sm:px-6">
+      <div className="-mx-4 flex shrink-0 items-center gap-3 border-t border-border bg-surface px-4 py-3 sm:-mx-6 sm:px-6">
         <Button variant="secondary" onClick={onBack} className="shrink-0 rounded-full">
           Back
         </Button>

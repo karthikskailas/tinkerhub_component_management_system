@@ -103,7 +103,7 @@ export function QtyInput({
         value={value}
         disabled={disabled}
         onChange={(e) => onChange(Math.min(Math.max(0, Math.round(Number(e.target.value)) || 0), max))}
-        className="h-11 w-20 rounded-lg border border-field-border bg-field text-center text-base font-semibold text-field-foreground disabled:opacity-50"
+        className="h-11 w-20 rounded-lg border border-border bg-background text-center text-base font-semibold text-field-foreground disabled:opacity-50"
       />
     </label>
   );

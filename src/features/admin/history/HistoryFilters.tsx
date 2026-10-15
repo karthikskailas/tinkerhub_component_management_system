@@ -95,14 +95,14 @@ export function HistoryFilters({
             type="date"
             value={customFrom}
             onChange={(e) => onCustomFromChange(e.target.value)}
-            className="min-h-11 rounded-lg border border-field-border bg-field px-2 text-sm text-field-foreground"
+            className="min-h-11 rounded-lg border border-border bg-background px-2 text-sm text-field-foreground"
           />
           <span className="text-sm text-muted">to</span>
           <input
             type="date"
             value={customTo}
             onChange={(e) => onCustomToChange(e.target.value)}
-            className="min-h-11 rounded-lg border border-field-border bg-field px-2 text-sm text-field-foreground"
+            className="min-h-11 rounded-lg border border-border bg-background px-2 text-sm text-field-foreground"
           />
         </div>
       )}
