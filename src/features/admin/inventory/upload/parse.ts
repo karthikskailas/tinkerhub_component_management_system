@@ -76,6 +76,8 @@ export function validateRows(rawRows: RawRowInput[]): ParsedRow[] {
       clientError = "name is required";
     } else if (!/^\d+$/.test(countRaw)) {
       clientError = countRaw ? "count must be a whole number >= 0" : "count required";
+    } else if (raw.attributes?.image_url && !/^https?:\/\//i.test(raw.attributes.image_url)) {
+      clientError = "image_url must be an http(s) link";
     } else {
       count = Number(countRaw);
     }
@@ -123,6 +125,9 @@ const BUILTIN_HEADERS: Record<string, string> = {
   location: "location",
   description: "description",
   returnable: "returnable",
+  "image url": "image_url",
+  image: "image_url",
+  "image link": "image_url",
 };
 
 // Headers resolve by built-in alias first, then by an admin-defined field's
@@ -146,6 +151,7 @@ function buildColumnIndex(headers: string[], fields: UploadField[]) {
   const locationIdx = first("location");
   const descriptionIdx = first("description");
   const returnableIdx = first("returnable");
+  const imageIdx = first("image_url");
 
   const missing: string[] = [];
   if (nameIdx === -1) missing.push("name");
@@ -157,7 +163,7 @@ function buildColumnIndex(headers: string[], fields: UploadField[]) {
   const customKeys = new Set(fields.filter((f) => !f.is_core).map((f) => f.key));
   const custom: { key: string; index: number }[] = [];
   const ignored: string[] = [];
-  const known = new Set([nameIdx, countIdx, newCountIdx, locationIdx, descriptionIdx, returnableIdx]);
+  const known = new Set([nameIdx, countIdx, newCountIdx, locationIdx, descriptionIdx, returnableIdx, imageIdx]);
   headers.forEach((h, i) => {
     const key = resolved[i];
     if (key && customKeys.has(key) && !custom.some((c) => c.key === key)) {
@@ -174,6 +180,7 @@ function buildColumnIndex(headers: string[], fields: UploadField[]) {
     location: locationIdx,
     description: descriptionIdx,
     returnable: returnableIdx,
+    image: imageIdx,
     custom,
     ignored,
   };
@@ -204,10 +211,12 @@ function rowsToParsedRows(
         columns.returnable >= 0 && cell(raw[columns.returnable]) !== ""
           ? parseReturnable(cell(raw[columns.returnable]))
           : null,
+      // image_url rides along in attributes: the RPCs read it from the row's top level.
       attributes: Object.fromEntries(
-        columns.custom
-          .map((c) => [c.key, cell(raw[c.index])] as const)
-          .filter(([, v]) => v !== ""),
+        [
+          ...columns.custom.map((c) => [c.key, cell(raw[c.index])] as const),
+          ...(columns.image >= 0 ? [["image_url", cell(raw[columns.image])] as const] : []),
+        ].filter(([, v]) => v !== ""),
       ),
     });
   });

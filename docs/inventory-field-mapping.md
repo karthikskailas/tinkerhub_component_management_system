@@ -10,7 +10,7 @@ Source: `docs/space-electronics-inventory.xlsx` (Sheet1, 213 rows incl. header, 
 | New count | `components.count` | int >= 0 | Wins over `Count` when both exist |
 | Description | `components.description` | text, nullable, max 500 | Blank cell keeps the stored value |
 
-Not in the sheet but kept as existing core fields: `returnable` (blank/absent column keeps the stored value; new rows default to true) and `image_url` (editable in the Edit dialog only).
+Not in the sheet but kept as existing core fields: `returnable` (blank/absent column keeps the stored value; new rows default to true) and `image_url` (editable in the Edit dialog, or via an `image_url` / `image` / `image link` column in a sheet upload: full http(s) link, blank keeps the stored image).
 
 ## New DB columns
 
