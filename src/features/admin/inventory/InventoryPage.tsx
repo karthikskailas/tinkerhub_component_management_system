@@ -59,8 +59,8 @@ export function InventoryPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <div className="flex shrink-0 flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-foreground">Inventory</h1>
           <p className="text-sm text-muted">
@@ -135,8 +135,8 @@ export function InventoryPage() {
       )}
 
       {components.rows.length > 0 && (
-        <div className="overflow-hidden rounded-xl bg-surface shadow-surface">
-          <div className="hidden grid-cols-[1.5fr_1fr_70px_70px_70px_140px] gap-2 border-b border-border bg-background px-3 py-2 text-xs font-medium text-muted sm:grid">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-surface shadow-surface">
+          <div className="hidden shrink-0 grid-cols-[1.5fr_1fr_70px_70px_70px_140px] gap-2 border-b border-border bg-background px-3 py-2 text-xs font-medium text-muted sm:grid">
             <span>{labels.get("name") ?? "Name"}</span>
             <span>{labels.get("location") ?? "Location"}</span>
             <span>{labels.get("count") ?? "Count"}</span>
@@ -144,6 +144,7 @@ export function InventoryPage() {
             <span>Available</span>
             <span />
           </div>
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
           {components.rows.map((component) => (
             <ComponentRow
               key={component.id}
@@ -154,13 +155,14 @@ export function InventoryPage() {
               onHistory={setHistoryTarget}
             />
           ))}
+          </div>
         </div>
       )}
 
       {components.total > 0 && (
         <nav
           aria-label="Pagination"
-          className="flex flex-wrap items-center justify-between gap-3 pt-2"
+          className="flex shrink-0 flex-wrap items-center justify-between gap-3"
         >
           <Button
             variant="secondary"

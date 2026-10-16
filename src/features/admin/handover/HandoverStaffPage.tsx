@@ -57,8 +57,8 @@ export function HandoverStaffPage() {
     "min-h-11 w-full rounded-lg border border-border bg-background px-3 text-base text-field-foreground outline-none focus:border-accent";
 
   return (
-    <div className="flex flex-col gap-4">
-      <div>
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <div className="shrink-0">
         <h1 className="text-xl font-semibold text-foreground">On-site staff</h1>
         <p className="text-sm text-muted">
           People who can confirm a handover from the QR link. They don't need a login.
@@ -70,7 +70,7 @@ export function HandoverStaffPage() {
           e.preventDefault();
           if (name.trim().length >= 2) add.mutate();
         }}
-        className="flex flex-col gap-3 rounded-xl bg-surface p-4 shadow-surface sm:flex-row sm:items-end"
+        className="flex shrink-0 flex-col gap-3 rounded-xl bg-surface p-4 shadow-surface sm:flex-row sm:items-end"
       >
         <label className="flex flex-1 flex-col gap-1">
           <span className="text-sm font-medium text-foreground">Name</span>
@@ -90,6 +90,7 @@ export function HandoverStaffPage() {
         </Button>
       </form>
 
+      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain">
       {list.isLoading && <SkeletonLines count={4} />}
       {list.isError && <p className="text-sm text-danger">Couldn't load the list.</p>}
       {list.data && list.data.length === 0 && (
@@ -122,6 +123,7 @@ export function HandoverStaffPage() {
           </li>
         ))}
       </ul>
+      </div>
     </div>
   );
 }

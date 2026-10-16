@@ -78,11 +78,11 @@ export function ReviewPage() {
   });
 
   return (
-    <div>
-      <div className="flex flex-col gap-4">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col gap-3">
         <Header pendingCount={pending.count} connection={pending.connection} />
 
-        <div className="flex gap-2">
+        <div className="flex shrink-0 gap-2">
           <TabButton active={tab === "pending"} onClick={() => setTab("pending")}>
             Pending
           </TabButton>
@@ -91,6 +91,8 @@ export function ReviewPage() {
           </TabButton>
         </div>
 
+        {/* Only the request list scrolls; header and tabs stay put. */}
+        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain">
         {list.isLoading && <SkeletonLines count={6} />}
 
         {list.isError && (
@@ -138,6 +140,7 @@ export function ReviewPage() {
             Tap a card to reopen its pickup card.
           </p>
         )}
+        </div>
       </div>
 
       {id && (

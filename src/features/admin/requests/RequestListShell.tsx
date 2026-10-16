@@ -46,8 +46,8 @@ export function RequestListShell<T>({
   onLoadMore,
 }: RequestListShellProps<T>) {
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-foreground">{title}</h1>
           {countLabel && <p className="text-sm text-muted">{countLabel}</p>}
@@ -64,8 +64,10 @@ export function RequestListShell<T>({
         fullWidth
       />
 
-      {filters && <div className="flex flex-wrap gap-2">{filters}</div>}
+      {filters && <div className="flex shrink-0 flex-wrap gap-2">{filters}</div>}
 
+      {/* Only this region scrolls; the header, search and filters stay put. */}
+      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain">
       {isLoading && <SkeletonLines count={6} />}
 
       {isError && (
@@ -96,6 +98,7 @@ export function RequestListShell<T>({
           </Button>
         </div>
       )}
+      </div>
     </div>
   );
 }
