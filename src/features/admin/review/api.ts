@@ -245,7 +245,11 @@ export async function approveRequest(
     p_items: items,
   });
   if (error) throw error;
-  const card = data as unknown as Omit<PickupCardData, "expires_at" | "public_token">;
+  const card = data as unknown as Omit<PickupCardData, "expires_at" | "public_token"> &
+    Partial<Pick<PickupCardData, "expires_at" | "public_token">>;
+  // Migration 0022 puts these in the RPC result (one round trip); an older
+  // database falls back to the separate lookup.
+  if (card.public_token) return card as PickupCardData;
   const extras = await fetchApprovalExtras(requestId);
   return { ...card, ...extras };
 }

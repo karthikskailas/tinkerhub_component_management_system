@@ -132,7 +132,7 @@ export function Step2Details({ draft, userId, onPartChange, onBack, onNext }: St
   }, [part, onPartChange]);
 
   const phoneValue = detailsForm.watch("phone");
-  const debouncedPhone = useDebounced(phoneValue, 400);
+  const debouncedPhone = useDebounced(phoneValue, 250);
   const phoneReady = isValidIndianMobile(debouncedPhone ?? "");
 
   const projectsQuery = useQuery({

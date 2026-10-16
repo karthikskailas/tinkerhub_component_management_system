@@ -9,7 +9,7 @@ import { adminCancelRequest, fetchPickupCardData } from "./api";
 import type { PickupCardData, RequestListRow } from "./api";
 import { APPROVED_QUERY_KEY, useApprovedRequests } from "./useApprovedRequests";
 import { CancelApprovalDialog } from "./CancelApprovalDialog";
-import { usePendingRequests } from "./usePendingRequests";
+import { dropPendingRow, usePendingRequests } from "./usePendingRequests";
 import { PickupCardDialog } from "./PickupCardDialog";
 import { RequestCard } from "./RequestCard";
 import { RequestDetailPanel } from "./RequestDetailPanel";
@@ -39,12 +39,15 @@ export function ReviewPage() {
   }
 
   function handleApproved(card: PickupCardData) {
+    dropPendingRow(queryClient, card.request_id);
+    void queryClient.invalidateQueries({ queryKey: APPROVED_QUERY_KEY });
     toast.success("Request approved.");
     setPickupCard(card);
     closeDetail();
   }
 
   function handleRejected() {
+    if (id) dropPendingRow(queryClient, id);
     toast.success("Request rejected.");
     closeDetail();
   }

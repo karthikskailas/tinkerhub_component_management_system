@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
+import { getSavedRequests } from "../../lib/storage";
 import { getRequestByToken } from "./api";
 import type { RequestStatus, ReturnSubmission } from "./api";
 
@@ -18,14 +19,21 @@ export interface RequestDetail {
 }
 
 async function fetchRequestDetail(id: string): Promise<RequestDetail> {
-  const { data: row, error } = await supabase
+  const rowQuery = supabase
     .from("requests")
     .select("id, public_token, status, reject_reason, expires_at, requester_name")
     .eq("id", id)
     .single();
+
+  const savedToken = getSavedRequests().find((r) => r.id === id)?.token;
+  const [{ data: row, error }, early] = await Promise.all([
+    rowQuery,
+    savedToken ? getRequestByToken(savedToken).catch(() => null) : Promise.resolve(null),
+  ]);
   if (error) throw error;
 
-  const byToken = await getRequestByToken(row.public_token);
+  // Normally the saved token is the row's token, so `early` is the answer.
+  const byToken = early ?? (await getRequestByToken(row.public_token));
 
   return {
     id: row.id,

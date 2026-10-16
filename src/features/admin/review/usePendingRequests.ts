@@ -21,6 +21,13 @@ function removeRowEverywhere(data: PendingData, id: string): PendingData {
   };
 }
 
+// Takes a row out of the pending list the moment an approve/reject succeeds,
+// instead of waiting for the realtime event to arrive. The count is left to
+// that event, which decrements it exactly once.
+export function dropPendingRow(queryClient: ReturnType<typeof useQueryClient>, id: string) {
+  queryClient.setQueryData<PendingData>(QUERY_KEY, (data) => (data ? removeRowEverywhere(data, id) : data));
+}
+
 function bumpCount(queryClient: ReturnType<typeof useQueryClient>, delta: number) {
   queryClient.setQueryData<number>(COUNT_QUERY_KEY, (prev) => Math.max(0, (prev ?? 0) + delta));
 }
